@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  h1= title
+
+  div.container-fluid 
+    div.row
+      div.col
+        form(action='/print', method='POST')
+          textarea.text-for-print#textForPrint(name="textForPrint", cols="60", rows="20") 
+    div.row
+      div.col
+        button.btn.btn-primary Печать
+
+
