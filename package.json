@@ -3,7 +3,9 @@
     "version": "0.0.0",
     "private": true,
     "scripts": {
-        "start": "set DEBUG=myapp:* && tsc & node ./bin/www"
+        "compile": "tsc",
+        "compile.and.start": "tsc && DEBUG=myapp:* node ./bin/www",
+        "start": "DEBUG=myapp:* node ./bin/www"
     },
     "dependencies": {
         "@types/bootstrap": "^5.0.14",
