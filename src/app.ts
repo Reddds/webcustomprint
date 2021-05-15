@@ -6,6 +6,7 @@ import logger from 'morgan';
 // import * as pug from 'pug';
 
 import indexRouter from "./index";
+import printRouter from "./print";
 import usersRouter from "../routes/users";
 
 const app = express();
@@ -23,8 +24,10 @@ app.use(express.static(__dirname)); // path.join(__dirname, 'public')
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/print', printRouter);
 
 app.use("/bootstrap", express.static(path.join(__dirname, '../node_modules/bootstrap/dist')));
+app.use("/jquery", express.static(path.join(__dirname, '../node_modules/jquery/dist')));
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

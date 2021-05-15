@@ -6,10 +6,12 @@ block content
   div.container-fluid 
     div.row
       div.col
-        form(action='/print', method='POST')
+        form#formPrint(action='/print', method='POST')
           textarea.text-for-print#textForPrint(name="textForPrint", cols="60", rows="20") 
+          // button.btn.btn-primary Печать временная
     div.row
       div.col
-        button.btn.btn-primary Печать
+        button.btn.btn-primary#btnPrint Печать
+  script(src='./index.page.js')
 
 
