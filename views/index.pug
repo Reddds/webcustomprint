@@ -23,6 +23,12 @@ block content
                     div.col
                       button.btn.btn-primary.mb-3.mt-3#btnPrint Печать
 
+                  div.row
+                    div.col
+                      button.btn.btn-secondary.mb-3.mt-3#btnPrint(type="button" data-bs-toggle="collapse" data-bs-target="#collapseOptions" aria-expanded="false" aria-controls="collapseExample") Настройки
+
+                  div.row
+                    div.col.collapse#collapseOptions
                       fieldset.row.mb-3
                         legend(class=`col-form-label col-sm-${titleCols} pt-0`) Character font
                         div(class=`col-sm-${12 - titleCols}`)
@@ -114,8 +120,10 @@ block content
                 each award in awards
                   div.col
                     div.card.for-print(id=award.filId)
+                      div.card-header.d-flex.justify-content-between
+                        div= award.title
                       div.card-body
-                        h5= award.title
+                        // h5= award.title
                         p.print-content= award.content
                         a.card-link.open-content(href="#") Открыть
                         a.card-link.print(href="#") Печать
@@ -126,12 +134,23 @@ block content
             div.col
               h3 Напечатано
               div.row.row-cols-1.row-cols-md-2.g-4
-                each printed in printeds
+                each printedWithFile in printeds
                   div.col
-                    div.card.for-print
+                    - 
+                      var attrs = { 
+                        'data-file-name': printedWithFile.fileName, 
+                        'data-print-mode': printedWithFile.printed.printMode,
+                        'data-line-spacing': printedWithFile.printed.lineSpacing,
+                        'data-char-font': printedWithFile.printed.charFont,
+                        'data-cpi-mode': printedWithFile.printed.cpiMode,
+                        };
+                    div.card.for-print&attributes(attrs)
+                      div.card-header.d-flex.justify-content-between
+                        div= printedWithFile.printed.title
+                        button.btn-close(type="button" aria-label="Close")
                       div.card-body
-                        h5= printed.title
-                        p.print-content= printed.content
+                        // h5= printed.title
+                        p.print-content= printedWithFile.printed.content
                         a.card-link.open-content(href="#") Открыть
                         a.card-link.print(href="#") Печать
                 else

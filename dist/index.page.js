@@ -28,6 +28,23 @@ $(() => {
             const content = $("p.print-content", $cardForPrint).text();
             $("#textForPrint").val(content);
 
+            const printMode = $cardForPrint.data("printMode");
+            const lineSpacing = $cardForPrint.data("lineSpacing");
+            const charFont = $cardForPrint.data("charFont");
+            const cpiMode = $cardForPrint.data("cpiMode");
+
+            if (printMode !== null && printMode !== undefined) {
+                $(`input[name="printMode"][value="${printMode}"]`).prop('checked', true);
+            }
+            if (printMode !== null && printMode !== undefined) {
+                $(`input[name="lineSpacing"]`).val(lineSpacing);
+            }
+            if (charFont !== null && charFont !== undefined) {
+                $(`input[name="charFont"][value="${charFont}"]`).prop('checked', true);
+            }
+            if (cpiMode !== null && cpiMode !== undefined) {
+                $(`input[name="cpiMode"][value="${cpiMode}"]`).prop('checked', true);
+            }
         });
     });
 

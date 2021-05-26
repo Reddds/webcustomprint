@@ -11,6 +11,11 @@ type awardModel = {
   content: string
 };
 
+type printedWithFileName = {
+  fileName: string,
+  printed: printedModel
+}
+
 /* GET home page. */
 router.get('/', (req, res, next) => {
   // Файлы наград лежат в printSrc
@@ -56,7 +61,7 @@ router.get('/', (req, res, next) => {
   });
 
 
-  const printeds: printedModel[] = [];
+  const printeds: printedWithFileName[] = [];
   fs.readdirSync(`${__dirname}/prints`).forEach(file => {
     const fileName = `${__dirname}/prints/${file}`;
     const fileId = file.replace(".", "_");
@@ -78,14 +83,14 @@ router.get('/', (req, res, next) => {
       //   lineBrakeLen = 1;
       // }
 
-      const titleStr = printed.title;
+      // const titleStr = printed.title;
       // let contentStr = awardFrameTxt;
       // if (endOfFirstLine > 0) {
       //   titleStr = awardFrameTxt.substring(0, endOfFirstLine);
       //   contentStr = awardFrameTxt.substring(endOfFirstLine + lineBrakeLen);
       // }
 
-      printeds.push(printed);
+      printeds.push({fileName: file, printed});
       // printeds.push(
       //   {
       //     filId: fileId,

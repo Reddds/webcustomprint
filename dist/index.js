@@ -61,13 +61,13 @@ router.get('/', (req, res, next) => {
             //   endOfFirstLine = awardFrameTxt.indexOf("\r");
             //   lineBrakeLen = 1;
             // }
-            const titleStr = printed.title;
+            // const titleStr = printed.title;
             // let contentStr = awardFrameTxt;
             // if (endOfFirstLine > 0) {
             //   titleStr = awardFrameTxt.substring(0, endOfFirstLine);
             //   contentStr = awardFrameTxt.substring(endOfFirstLine + lineBrakeLen);
             // }
-            printeds.push(printed);
+            printeds.push({ fileName: file, printed });
             // printeds.push(
             //   {
             //     filId: fileId,
