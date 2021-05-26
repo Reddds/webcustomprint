@@ -75,3 +75,5 @@ typings/
 # FuseBox cache
 .fusebox/
 /dist/prints/
+dist/print.js
+dist/print.js.map

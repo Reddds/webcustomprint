@@ -16,7 +16,8 @@
         "http-errors": "~1.6.3",
         "jquery": "^3.6.0",
         "morgan": "^1.9.1",
-        "pug": "^2.0.4"
+        "node-cp866buffer": "^0.0.6",
+        "pug": "^3.0.2"
     },
     "devDependencies": {
         "@types/cookie-parser": "^1.4.2",
