@@ -53,7 +53,10 @@ router.get('/', (req, res, next) => {
 router.post('/', (req, res, next) => {
     // console.log(req);
     // console.log(req.params);
-    const savedFile = `${__dirname}/prints/print_${Date.now()}`;// "/dev/usb/lp0";
+    const action = req.body.action;
+    console.log("action", action);
+    const dir = action === "saveAward" ? "printSrc" : "prints";
+    const savedFile = `${__dirname}/${dir}/print_${Date.now()}`;// "/dev/usb/lp0";
     const printerFile = "/dev/usb/lp0";
     const textForPrint = req.body.textForPrint;
 
@@ -64,6 +67,8 @@ router.post('/', (req, res, next) => {
     const charFontVal = parseInt(req.body.charFont, 10);
     const cpiModeVal = parseInt(req.body.cpiMode, 10);
 
+    const title = req.body.title;
+
 
     console.log("printMode", req.body.printMode);
     console.log("lineSpacing", req.body.lineSpacing);
@@ -71,7 +76,7 @@ router.post('/', (req, res, next) => {
     console.log("cpiMode", req.body.cpiMode);
 
     const forPrint: printedModel = {
-        title: new Date().toISOString(),
+        title: title ?? new Date().toISOString(),
         printMode: printModeVal,// 0x01,
         lineSpacing: lineSpacingVal, // 0
         charFont: charFontVal, // 0x01,
@@ -82,36 +87,22 @@ router.post('/', (req, res, next) => {
     try {
         fs.writeFileSync(savedFile, JSON.stringify(forPrint));
 
-        const setupBuf = new Uint8Array([
-            0x1b, 0x21, forPrint.printMode,
-            0x1b, 0x33, forPrint.lineSpacing,
-            0x1b, 0x4d, forPrint.charFont,
-            0x1b, 0xc1, forPrint.cpiMode]);
+        if (action === "print") {
+            const setupBuf = new Uint8Array([
+                0x1b, 0x21, forPrint.printMode,
+                0x1b, 0x33, forPrint.lineSpacing,
+                0x1b, 0x4d, forPrint.charFont,
+                0x1b, 0xc1, forPrint.cpiMode]);
 
-        // const encoder = new TextEncoder();
-        // encoder.encoding= "CP866";
-        const textBytes = cp866buffer.encode(textForPrint);
-        // const textBytes = encoder.encode(textForPrint);
-        const fullBuf = new Uint8Array([...setupBuf, ...textBytes]);
+            // const encoder = new TextEncoder();
+            // encoder.encoding= "CP866";
+            const textBytes = cp866buffer.encode(textForPrint);
+            // const textBytes = encoder.encode(textForPrint);
+            const fullBuf = new Uint8Array([...setupBuf, ...textBytes]);
 
-        const bufWithCut = new Uint8Array([...fullBuf, ...cutAndEject]);
-        fs.writeFileSync(printerFile, bufWithCut);
-
-        // fs.writeFileSync(printerFile, cutAndEject);
-
-        /*const command = `${__dirname}/printFile ${printerFile} ${__dirname}/CutAndEject`;
-        console.log("command", command);
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                console.log(`error: ${error.message}`);
-                return;
-            }
-            if (stderr) {
-                console.log(`stderr: ${stderr}`);
-                return;
-            }
-            console.log(`stdout: ${stdout}`);
-        });*/
+            const bufWithCut = new Uint8Array([...fullBuf, ...cutAndEject]);
+            fs.writeFileSync(printerFile, bufWithCut);
+        }
 
 
     } catch (err) {

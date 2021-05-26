@@ -1,6 +1,6 @@
 import express from 'express';
 import fs from "fs";
-import {printedModel} from "./print";
+import { printedModel } from "./print";
 
 
 const router = express.Router();
@@ -90,7 +90,7 @@ router.get('/', (req, res, next) => {
       //   contentStr = awardFrameTxt.substring(endOfFirstLine + lineBrakeLen);
       // }
 
-      printeds.push({fileName: file, printed});
+      printeds.push({ fileName: file, printed });
       // printeds.push(
       //   {
       //     filId: fileId,
@@ -108,6 +108,35 @@ router.get('/', (req, res, next) => {
 
   // console.log("awards", awards);
   res.render('index', { title: 'Печать', awards, printeds });
+});
+
+router.delete('/', (req, res, next) => {
+  // console.log(req.body);
+  try {
+
+    const fileName = req.body.fileName;
+    if (!/\w+/.test(fileName)) {
+      res.json({
+        success: false,
+        message: `File name error`
+      });
+      return;
+    }
+
+    const filePath = `${__dirname}/prints/${fileName}`;
+
+    fs.unlinkSync(filePath);
+    res.json({
+      success: true,
+      fileName
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error
+    });
+  }
+
 });
 
 export default router;

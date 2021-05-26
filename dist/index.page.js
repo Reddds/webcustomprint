@@ -49,11 +49,7 @@ $(() => {
     });
 
 
-
-
-    $("#btnPrint").on("click", (e) => {
-        e.stopPropagation();
-        e.preventDefault();
+    function Send(action) {
         const textForPrintStr = ($("#textForPrint").val());
         if (!textForPrintStr) {
             alert("Введите текст для печати!");
@@ -65,7 +61,11 @@ $(() => {
         const charFontStr = $('input[name=charFont]:checked').val();
         const cpiModeStr = $('input[name=cpiMode]:checked').val();
 
+        const title = $('input[name=title]').val();
+
         $.post("/print", {
+            action,
+            title,
             textForPrint: textForPrintStr,
             printMode: printModeStr,
             lineSpacing: lineSpacingStr,
@@ -77,7 +77,55 @@ $(() => {
                 alert(`Ошибка печати\n${data.message}`);
                 return;
             }
-            alert("Напечатано");
+            alert("Готово");
         }, "json");
+    }
+
+    $("#btnPrint").on("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        Send("print");
     });
+
+    $("#btnSave").on("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        Send("save");
+    });
+
+    $("#btnSaveAward").on("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        Send("saveAward");
+    });
+
+    $(".delete-file").on("click", function() {
+        const $cardForPrint = $(this).closest("div.card.for-print");
+        const fileName = $cardForPrint.data("fileName");
+        if (!fileName) {
+            return;
+        }
+
+        if (!confirm("Действительно удалить?")) {
+            return;
+        }
+
+        $.ajax({
+            url: '/',
+            type: 'DELETE',
+            data: { fileName },
+            success: function(data) {
+                // Do something with the result
+                console.log("data", data);
+                // const data = JSON.parse(result);
+                if (!data.success) {
+                    alert(data.message);
+                    return;
+                }
+
+                $cardForPrint.closest("div.col").remove();
+            }
+        });
+
+    })
 });

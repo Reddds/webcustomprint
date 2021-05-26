@@ -19,13 +19,21 @@ block content
                       textarea.bg-text-for-print#bgTextForPrint(cols="60", rows="20", disabled="disabled", value="")
                       textarea.text-for-print#textForPrint(name="textForPrint", cols="60", rows="20", value="") 
                       // button.btn.btn-primary Печать временная
+
+                  div.row.mb-3
+                    label(class=`col-sm-${titleCols} col-form-label` for="title") Название
+                    div(class=`col-sm-${12 - titleCols}`)
+                      input.form-control(id="title" name="title", type="text", value=new Date().toISOString())
+
                   div.row
-                    div.col
-                      button.btn.btn-primary.mb-3.mt-3#btnPrint Печать
+                    div.col.d-flex.justify-content-between
+                      button.btn.btn-primary.mb-3.mt-3.mr-5#btnPrint Печать
+                      button.btn.btn-outline-primary.mb-3.mt-3.mr-5#btnSave Сохранить
+                      button.btn.btn-outline-primary.mb-3.mt-3#btnSaveAward Сохранить в награды
 
                   div.row
                     div.col
-                      button.btn.btn-secondary.mb-3.mt-3#btnPrint(type="button" data-bs-toggle="collapse" data-bs-target="#collapseOptions" aria-expanded="false" aria-controls="collapseExample") Настройки
+                      button.btn.btn-outline-secondary.mb-3.mt-3#btnPrint(type="button" data-bs-toggle="collapse" data-bs-target="#collapseOptions" aria-expanded="false" aria-controls="collapseExample") Настройки
 
                   div.row
                     div.col.collapse#collapseOptions
@@ -125,8 +133,8 @@ block content
                       div.card-body
                         // h5= award.title
                         p.print-content= award.content
-                        a.card-link.open-content(href="#") Открыть
-                        a.card-link.print(href="#") Печать
+                        a.stretched-link.open-content(href="#") Открыть
+                        
                 else
                   div Наград нет
 
@@ -147,12 +155,12 @@ block content
                     div.card.for-print&attributes(attrs)
                       div.card-header.d-flex.justify-content-between
                         div= printedWithFile.printed.title
-                        button.btn-close(type="button" aria-label="Close")
+                        button.btn-close.delete-file(type="button" aria-label="Close")
                       div.card-body
                         // h5= printed.title
                         p.print-content= printedWithFile.printed.content
-                        a.card-link.open-content(href="#") Открыть
-                        a.card-link.print(href="#") Печать
+                        a.stretched-link.open-content(href="#") Открыть
+                       
                 else
                   div Пока ничего нет
 

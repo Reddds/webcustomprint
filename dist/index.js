@@ -84,5 +84,30 @@ router.get('/', (req, res, next) => {
     // console.log("awards", awards);
     res.render('index', { title: 'Печать', awards, printeds });
 });
+router.delete('/', (req, res, next) => {
+    // console.log(req.body);
+    try {
+        const fileName = req.body.fileName;
+        if (!/\w+/.test(fileName)) {
+            res.json({
+                success: false,
+                message: `File name error`
+            });
+            return;
+        }
+        const filePath = `${__dirname}/prints/${fileName}`;
+        fs_1.default.unlinkSync(filePath);
+        res.json({
+            success: true,
+            fileName
+        });
+    }
+    catch (error) {
+        res.json({
+            success: false,
+            message: error
+        });
+    }
+});
 exports.default = router;
 //# sourceMappingURL=index.js.map
