@@ -1,17 +1,142 @@
 extends layout
 
-block content
-  h1= title
 
-  div.container-fluid 
+block content
+
+  h1= title
+  - var titleCols = 8;
+  div.container-fluid
     div.row
       div.col
-        form#formPrint(action='/print', method='POST')
-          textarea.text-for-print#textForPrint(name="textForPrint", cols="60", rows="20") 
-          // button.btn.btn-primary Печать временная
-    div.row
+        div.container-fluid
+          div.row
+            div.col
+              div.container-fluid
+                form#formPrint(action='/print', method='POST')
+                  div.row
+                    div.col
+                    
+                      textarea.bg-text-for-print#bgTextForPrint(cols="60", rows="20", disabled="disabled", value="")
+                      textarea.text-for-print#textForPrint(name="textForPrint", cols="60", rows="20", value="") 
+                      // button.btn.btn-primary Печать временная
+                  div.row
+                    div.col
+                      button.btn.btn-primary.mb-3.mt-3#btnPrint Печать
+
+                      fieldset.row.mb-3
+                        legend(class=`col-form-label col-sm-${titleCols} pt-0`) Character font
+                        div(class=`col-sm-${12 - titleCols}`)
+                          div.form-check.form-check-inline
+                            input.form-check-input(id="printMode0", type="radio", name="printMode", value="0")
+                            label.form-check-label(for="printMode0") A
+                          div.form-check.form-check-inline
+                            input.form-check-input(id="printMode1", type="radio", name="printMode", value="1", checked)
+                            label.form-check-label(for="printMode1") B
+
+                      div.row.mb-3
+                        label(class=`col-sm-${titleCols} col-form-label` for="lineSpacing") Расстояние между строк
+                        div(class=`col-sm-${12 - titleCols}`)
+                          input.form-control(id="lineSpacing" name="lineSpacing", type="number", value=0)
+
+                      fieldset.row.mb-3
+                        legend(class=`col-form-label col-sm-${titleCols} pt-0`, title="Select character font")
+                          | Character font
+                          table.table.table-striped
+                            thead
+                              th Char /Inch
+                              th n
+                              th FUNCTION
+                            tbody 
+                              tr
+                                td(rowspan=2)
+                                  | A=11cpi
+                                  br
+                                  .
+                                    B=15cpi
+                                td 0,48
+                                td Font 11 cpi (18x24)
+                              tr
+                                td 1,49
+                                td Font 15 cpi (14x24)
+
+                              tr
+                                td(rowspan=2)
+                                  | A=15cpi
+                                  br
+                                  .
+                                    B=20cpi
+                                td 0,48
+                                td Font 15 cpi (14x24)
+                              tr
+                                td 1,49
+                                td Font 20 cpi (10x24)
+
+                              tr
+                                td(rowspan=2)
+                                  | A=20cpi
+                                  br
+                                  .
+                                    B=15cpi
+                                td 0,48
+                                td Font 20 cpi (10x24)
+                              tr
+                                td 1,49
+                                td Font 15 cpi (14x24)
+
+                        div(class=`col-sm-${12 - titleCols}`)
+                          div.form-check.form-check-inline
+                            input.form-check-input(id="charFont0", type="radio", name="charFont", value="0")
+                            label.form-check-label(for="charFont0") 0
+                          div.form-check.form-check-inline
+                            input.form-check-input(id="charFont1", type="radio", name="charFont", value="1", checked)
+                            label.form-check-label(for="charFont1") 1
+
+                      fieldset.row.mb-3
+                        legend(class=`col-form-label col-sm-${titleCols} pt-0`, title="Sets cpi mode based on the following values of n") Cpi mode
+                        div(class=`col-sm-${12 - titleCols}`)
+                          div.form-check.form-check-inline
+                            input.form-check-input(id="cpiMode0", type="radio", name="cpiMode", value="0")
+                            label.form-check-label(for="cpiMode0") Font A = 11 cpi<br/>Font B = 15 cpi
+                          div.form-check.form-check-inline
+                            input.form-check-input(id="cpiMode1", type="radio", name="cpiMode", value="1", checked)
+                            label.form-check-label(for="cpiMode1") Font A = 15 cpi<br/>Font B = 20 cpi
+                          div.form-check.form-check-inline
+                            input.form-check-input(id="cpiMode2", type="radio", name="cpiMode", value="2")
+                            label.form-check-label(for="cpiMode2") Font A = 20 cpi<br/>Font B = 15 cpi
+
+
       div.col
-        button.btn.btn-primary#btnPrint Печать
+        div.container-fluid.prints
+          div.row
+            div.col
+              h3 Награды
+              div.row.row-cols-1.row-cols-md-2.g-4
+                each award in awards
+                  div.col
+                    div.card.for-print(id=award.filId)
+                      div.card-body
+                        h5= award.title
+                        p.print-content= award.content
+                        a.card-link.open-content(href="#") Открыть
+                        a.card-link.print(href="#") Печать
+                else
+                  div Наград нет
+
+          div.row
+            div.col
+              h3 Напечатано
+              div.row.row-cols-1.row-cols-md-2.g-4
+                each printed in printeds
+                  div.col
+                    div.card.for-print
+                      div.card-body
+                        h5= printed.title
+                        p.print-content= printed.content
+                        a.card-link.open-content(href="#") Открыть
+                        a.card-link.print(href="#") Печать
+                else
+                  div Пока ничего нет
+
   script(src='./index.page.js')
 
 
