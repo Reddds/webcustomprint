@@ -59,12 +59,23 @@ router.post('/', (req, res, next) => {
 
     const cutAndEject = new Uint8Array([0x0a, 0x1b, 0x69, 0x1d, 0x65, 0x05]);
 
+    const printModeVal = parseInt(req.body.printMode, 10);
+    const lineSpacingVal = parseInt(req.body.lineSpacing, 10);
+    const charFontVal = parseInt(req.body.charFont, 10);
+    const cpiModeVal = parseInt(req.body.cpiMode, 10);
+
+
+    console.log("printMode", req.body.printMode);
+    console.log("lineSpacing", req.body.lineSpacing);
+    console.log("charFont", req.body.charFont);
+    console.log("cpiMode", req.body.cpiMode);
+
     const forPrint: printedModel = {
         title: new Date().toISOString(),
-        printMode: 0x01,
-        lineSpacing: 0,
-        charFont: 0x01,
-        cpiMode: 0x01,
+        printMode: printModeVal,// 0x01,
+        lineSpacing: lineSpacingVal, // 0
+        charFont: charFontVal, // 0x01,
+        cpiMode: cpiModeVal, // 0x01,
         content: textForPrint
     }
 

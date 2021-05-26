@@ -42,7 +42,19 @@ $(() => {
             alert("Введите текст для печати!");
             return;
         }
-        $.post("/print", { textForPrint: textForPrintStr }, (data) => {
+
+        const printModeStr = $('input[name="printMode"]:checked').val();
+        const lineSpacingStr = $('input[name=lineSpacing]').val();
+        const charFontStr = $('input[name=charFont]:checked').val();
+        const cpiModeStr = $('input[name=cpiMode]:checked').val();
+
+        $.post("/print", {
+            textForPrint: textForPrintStr,
+            printMode: printModeStr,
+            lineSpacing: lineSpacingStr,
+            charFont: charFontStr,
+            cpiMode: cpiModeStr,
+        }, (data) => {
             console.log("data", data);
             if (!data.success) {
                 alert(`Ошибка печати\n${data.message}`);
