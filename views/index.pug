@@ -16,8 +16,8 @@ block content
                   div.row
                     div.col
                     
-                      textarea.bg-text-for-print#bgTextForPrint(cols="60", rows="20", disabled="disabled", value="")
-                      textarea.text-for-print#textForPrint(name="textForPrint", cols="60", rows="20", value="") 
+                      textarea.bg-text-for-print.print-row-len-56#bgTextForPrint(cols="60", rows="20", disabled="disabled", value="")
+                      textarea.text-for-print.print-row-len-56#textForPrint(name="textForPrint", cols="60", rows="20", value="") 
                       // button.btn.btn-primary Печать временная
 
                   div.row
@@ -36,8 +36,17 @@ block content
                       div.alert.alert-info(role="alert") Для подстановки даты надо вставить в шаблон "##DATA##"
 
                   div.row
-                    div.col
+                    div.col.d-flex.justify-content-between
                       button.btn.btn-outline-secondary.mb-3.mt-3#btnPrint(type="button" data-bs-toggle="collapse" data-bs-target="#collapseOptions" aria-expanded="false" aria-controls="collapseExample") Настройки
+                      div.form-check.form-check-inline
+                        input.form-check-input(id="rowLen33", type="radio", name="rowLen", value="33")
+                        label.form-check-label(for="rowLen33") 33
+                      div.form-check.form-check-inline
+                        input.form-check-input(id="rowLen42", type="radio", name="rowLen", value="42")
+                        label.form-check-label(for="rowLen42") 42
+                      div.form-check.form-check-inline
+                        input.form-check-input(id="rowLen56", type="radio", name="rowLen", value="56", checked)
+                        label.form-check-label(for="rowLen56") 56
 
                   div.row
                     div.col.collapse#collapseOptions
@@ -167,7 +176,7 @@ block content
                     div.card.for-print&attributes(attrs)
                       div.card-header.d-flex.justify-content-between
                         div= printedWithFile.printed.title
-                        button.btn-close.delete-file(type="button" aria-label="Close")
+                        button.btn-close.delete-file(type="button" aria-label="Close", style="z-index:5;")
                       div.card-body
                         // h5= printed.title
                         p.print-content= printedWithFile.printed.content

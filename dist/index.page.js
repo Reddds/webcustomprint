@@ -5,6 +5,7 @@ $(() => {
 
     
     */
+    let rowWidth = 56;
 
     Date.prototype.yyyymmdd = function() {
         var mm = this.getMonth() + 1; // getMonth() is zero-based
@@ -26,21 +27,41 @@ $(() => {
         ].join('.');
     };
 
-    const $bgTextForPrint = $("#bgTextForPrint");
-    let bgText = "";
-    const rows = 20;
-    for (let i = 0; i < rows; i++) {
-        for (let c = 0; c < 56; c++) {
-            bgText += " ";
+
+
+
+    function DrawRightBorder() {
+        // const $areas = $("textarea.bg-text-for-print, textarea.text-for-print");
+        // $areas.prop("cols", rowWidth + 4);
+
+        // switch (rowWidth) {
+        //     case 33:
+        //         $areas.removeClass("print-row-len-42 print-row-len-56").addClass("print-row-len-33");
+        //         break;
+        //     case 42:
+        //         $areas.removeClass("print-row-len-33 print-row-len-56").addClass("print-row-len-42");
+        //         break;
+        //     case 56:
+        //         $areas.removeClass("print-row-len-42 print-row-len-33").addClass("print-row-len-56");
+        //         break;
+        // }
+
+
+        const $bgTextForPrint = $("#bgTextForPrint");
+        let bgText = "";
+        const rows = 20;
+        for (let i = 0; i < rows; i++) {
+            for (let c = 0; c < rowWidth; c++) {
+                bgText += " ";
+            }
+            bgText += "|";
+            if (i < rows - 1) {
+                bgText += "\n";
+            }
         }
-        bgText += "|";
-        if (i < rows - 1) {
-            bgText += "\n";
-        }
+        $bgTextForPrint.val(bgText);
     }
-    $bgTextForPrint.val(bgText);
-
-
+    DrawRightBorder();
 
     $("div.card.for-print a.open-content").each(function() {
         $(this).on("click", function() {
@@ -151,5 +172,152 @@ $(() => {
             }
         });
 
-    })
+    });
+
+    function CheckSettings() {
+
+        const sets = [{
+                rowLen: 42,
+                printMode: 0,
+                charFont: 0,
+                cpiMode: 0
+            },
+            {
+                rowLen: 42,
+                printMode: 0,
+                charFont: 0,
+                cpiMode: 1
+            },
+            {
+                rowLen: 42,
+                printMode: 0,
+                charFont: 0,
+                cpiMode: 2
+            },
+            {
+                rowLen: 33,
+                printMode: 0,
+                charFont: 1,
+                cpiMode: 0
+            },
+            {
+                rowLen: 56,
+                printMode: 0,
+                charFont: 1,
+                cpiMode: 1
+            },
+            {
+                rowLen: 56,
+                printMode: 0,
+                charFont: 1,
+                cpiMode: 2
+            },
+            {
+                rowLen: 33,
+                printMode: 1,
+                charFont: 0,
+                cpiMode: 0
+            },
+            {
+                rowLen: 42,
+                printMode: 1,
+                charFont: 0,
+                cpiMode: 1
+            },
+            {
+                rowLen: 56,
+                printMode: 1,
+                charFont: 0,
+                cpiMode: 2
+            },
+            {
+                rowLen: 33,
+                printMode: 1,
+                charFont: 1,
+                cpiMode: 0
+            },
+            {
+                rowLen: 56,
+                printMode: 1,
+                charFont: 1,
+                cpiMode: 1
+            },
+            {
+                rowLen: 56,
+                printMode: 1,
+                charFont: 1,
+                cpiMode: 2
+            },
+        ];
+
+        const printMode = parseInt($('input[name="printMode"]:checked').val());
+        const charFont = parseInt($('input[name=charFont]:checked').val());
+        const cpiMode = parseInt($('input[name=cpiMode]:checked').val());
+
+        // console.log("printMode", printMode);
+        // console.log("charFont", charFont);
+        // console.log("cpiMode", cpiMode);
+
+        for (let i = 0; i < sets.length; i++) {
+            const set = sets[i];
+            if (set.printMode === printMode && set.charFont === charFont && set.cpiMode === cpiMode) {
+                console.log("row len", set.rowLen);
+                rowWidth = set.rowLen;
+                DrawRightBorder();
+                $(`input[name="rowLen"][value="${rowWidth}"]`).prop('checked', true);
+                break;
+            }
+        }
+    }
+
+    $('input[type=radio][name=printMode],input[type=radio][name=charFont],input[type=radio][name=cpiMode]')
+        .on("change", function() {
+            CheckSettings();
+        });
+
+    $('input[type=radio][name=rowLen]')
+        .on("change", function() {
+            console.log(this.value);
+
+            const rowLen = parseInt(this.value);
+            if (rowWidth === rowLen) {
+                return;
+            }
+            rowWidth = rowLen;
+            DrawRightBorder();
+
+            let set = null;
+            switch (rowLen) {
+                case 33:
+                    set = {
+                        rowLen: 33,
+                        printMode: 0,
+                        charFont: 1,
+                        cpiMode: 0
+                    };
+                    break;
+                case 42:
+                    set = {
+                        rowLen: 42,
+                        printMode: 0,
+                        charFont: 0,
+                        cpiMode: 0
+                    };
+                    break;
+                case 56:
+                    set = {
+                        rowLen: 56,
+                        printMode: 1,
+                        charFont: 1,
+                        cpiMode: 1
+                    };
+                    break;
+            }
+
+            $(`input[name="printMode"][value="${set.printMode}"]`).prop('checked', true);
+            $(`input[name="charFont"][value="${set.charFont}"]`).prop('checked', true);
+            $(`input[name="cpiMode"][value="${set.cpiMode}"]`).prop('checked', true);
+
+
+        });
 });

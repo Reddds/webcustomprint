@@ -38,3 +38,15 @@ div.container-fluid.prints {
     overflow-y: scroll;
     height: 80vh;
 }
+
+textarea.print-row-len-56 {
+    transform: scaleX(1);
+}
+
+textarea.print-row-len-42 {
+    transform: scaleX(1.5);
+}
+
+textarea.print-row-len-33 {
+    transform: scaleX(1.7);
+}
