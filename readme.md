@@ -17,4 +17,21 @@ cd /home/pi/share/Custom/webcustomprint
 npm run start
 `
 
-**Not work yet!**
+Copy or make link "webcustomprint.service" to "/lib/systemd/system"
+
+`ln -s /home/pi/share/Custom/webcustomprint/webcustomprint.service /lib/systemd/system/webcustomprint.service`
+
+Whenever you change a service file, systemd has to know it so that it no longer attempts to reference these files and reverts back to using the system copies. . You can do this by typing:
+`sudo systemctl daemon-reload`
+
+What's coming after is to launch our app with:
+`sudo systemctl start webcustomprint`
+
+You can use following commands to check service status and stop it
+`sudo systemctl status webcustomprint` `sudo systemctl stop webcustomprint`
+
+Following commands can be used to do same
+`service webcustomprint start` `service webcustomprint status` `service webcustomprint stop`
+
+Autostart
+`sudo systemctl enable webcustomprint`

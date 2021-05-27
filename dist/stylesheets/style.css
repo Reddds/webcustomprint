@@ -24,12 +24,12 @@ a {
 }
 
 div.card.for-print {
-    width: 15rem;
+    width: 16rem;
 }
 
 div.card.for-print p.print-content {
     white-space: pre-wrap;
-    font-size: .5rem;
+    font-size: .4rem;
     font-family: monospace;
     line-height: 1;
 }

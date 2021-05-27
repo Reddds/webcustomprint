@@ -6,6 +6,26 @@ $(() => {
     
     */
 
+    Date.prototype.yyyymmdd = function() {
+        var mm = this.getMonth() + 1; // getMonth() is zero-based
+        var dd = this.getDate();
+
+        return [this.getFullYear(),
+            (mm > 9 ? '' : '0') + mm,
+            (dd > 9 ? '' : '0') + dd
+        ].join('');
+    };
+
+    Date.prototype.dd_mm_yy = function() {
+        var mm = this.getMonth() + 1; // getMonth() is zero-based
+        var dd = this.getDate();
+
+        return [(dd > 9 ? '' : '0') + dd,
+            (mm > 9 ? '' : '0') + mm,
+            this.getFullYear() % 100,
+        ].join('.');
+    };
+
     const $bgTextForPrint = $("#bgTextForPrint");
     let bgText = "";
     const rows = 20;
@@ -25,7 +45,11 @@ $(() => {
     $("div.card.for-print a.open-content").each(function() {
         $(this).on("click", function() {
             const $cardForPrint = $(this).closest("div.card.for-print");
-            const content = $("p.print-content", $cardForPrint).text();
+            let content = $("p.print-content", $cardForPrint).text();
+
+            var date = new Date();
+            content = content.replace("##DATA##", date.dd_mm_yy())
+
             $("#textForPrint").val(content);
 
             const printMode = $cardForPrint.data("printMode");

@@ -1,0 +1,13 @@
+[Unit]
+Description=App for printing at Custom printer via web
+# Documentation=readme.md
+After=network.target 
+
+[Service]
+Type=simple
+User=pi
+ExecStart=/usr/bin/node /home/pi/share/Custom/webcustomprint/bin/www
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

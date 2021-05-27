@@ -20,7 +20,7 @@ block content
                       textarea.text-for-print#textForPrint(name="textForPrint", cols="60", rows="20", value="") 
                       // button.btn.btn-primary Печать временная
 
-                  div.row.mb-3
+                  div.row
                     label(class=`col-sm-${titleCols} col-form-label` for="title") Название
                     div(class=`col-sm-${12 - titleCols}`)
                       input.form-control(id="title" name="title", type="text", value=new Date().toISOString())
@@ -30,6 +30,10 @@ block content
                       button.btn.btn-primary.mb-3.mt-3.mr-5#btnPrint Печать
                       button.btn.btn-outline-primary.mb-3.mt-3.mr-5#btnSave Сохранить
                       button.btn.btn-outline-primary.mb-3.mt-3#btnSaveAward Сохранить в награды
+
+                  div.row
+                    div.col
+                      div.alert.alert-info(role="alert") Для подстановки даты надо вставить в шаблон "##DATA##"
 
                   div.row
                     div.col
@@ -125,14 +129,22 @@ block content
             div.col
               h3 Награды
               div.row.row-cols-1.row-cols-md-2.g-4
-                each award in awards
+                each printedWithFile in awards
                   div.col
-                    div.card.for-print(id=award.filId)
+                    - 
+                      var attrs = { 
+                        'data-file-name': printedWithFile.fileName, 
+                        'data-print-mode': printedWithFile.printed.printMode,
+                        'data-line-spacing': printedWithFile.printed.lineSpacing,
+                        'data-char-font': printedWithFile.printed.charFont,
+                        'data-cpi-mode': printedWithFile.printed.cpiMode,
+                        };
+                    div.card.for-print&attributes(attrs)
                       div.card-header.d-flex.justify-content-between
-                        div= award.title
+                        div= printedWithFile.printed.title
                       div.card-body
                         // h5= award.title
-                        p.print-content= award.content
+                        p.print-content= printedWithFile.printed.content
                         a.stretched-link.open-content(href="#") Открыть
                         
                 else
