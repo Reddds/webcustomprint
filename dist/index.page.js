@@ -90,6 +90,7 @@ $(() => {
             if (cpiMode !== null && cpiMode !== undefined) {
                 $(`input[name="cpiMode"][value="${cpiMode}"]`).prop('checked', true);
             }
+            CheckSettings();
         });
     });
 
@@ -177,7 +178,7 @@ $(() => {
     function CheckSettings() {
 
         const sets = [{
-                rowLen: 42,
+                rowLen: 33,
                 printMode: 0,
                 charFont: 0,
                 cpiMode: 0
@@ -195,7 +196,7 @@ $(() => {
                 cpiMode: 2
             },
             {
-                rowLen: 33,
+                rowLen: 42,
                 printMode: 0,
                 charFont: 1,
                 cpiMode: 0
@@ -292,7 +293,7 @@ $(() => {
                     set = {
                         rowLen: 33,
                         printMode: 0,
-                        charFont: 1,
+                        charFont: 0,
                         cpiMode: 0
                     };
                     break;
@@ -300,7 +301,7 @@ $(() => {
                     set = {
                         rowLen: 42,
                         printMode: 0,
-                        charFont: 0,
+                        charFont: 1,
                         cpiMode: 0
                     };
                     break;
