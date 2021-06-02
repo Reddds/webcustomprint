@@ -20,16 +20,24 @@ block content
                       textarea.text-for-print.print-row-len-56#textForPrint(name="textForPrint", cols="60", rows="20", value="") 
                       // button.btn.btn-primary Печать временная
 
-                  div.row
-                    label(class=`col-sm-${titleCols} col-form-label` for="title") Название
-                    div(class=`col-sm-${12 - titleCols}`)
-                      input.form-control(id="title" name="title", type="text", value=new Date().toISOString())
 
                   div.row
                     div.col.d-flex.justify-content-between
                       button.btn.btn-primary.mb-3.mt-3.mr-5#btnPrint Печать
-                      button.btn.btn-outline-primary.mb-3.mt-3.mr-5#btnSave Сохранить
-                      button.btn.btn-outline-primary.mb-3.mt-3#btnSaveAward Сохранить в награды
+                      div.form-check.form-check-inline.mt-3
+                        input.form-check-input(id="rowLen33", type="radio", name="rowLen", value="33")
+                        label.form-check-label(for="rowLen33") 33
+                      div.form-check.form-check-inline.mt-3
+                        input.form-check-input(id="rowLen42", type="radio", name="rowLen", value="42")
+                        label.form-check-label(for="rowLen42") 42
+                      div.form-check.form-check-inline.mt-3
+                        input.form-check-input(id="rowLen56", type="radio", name="rowLen", value="56", checked)
+                        label.form-check-label(for="rowLen56") 56
+
+                  div.row.mb-1
+                    label(class=`col-sm-4 col-form-label` for="title") Название
+                    div(class=`col-sm-8`)
+                      input.form-control(id="title" name="title", type="text", value=new Date().toISOString())
 
                   div.row
                     div.col
@@ -38,15 +46,9 @@ block content
                   div.row
                     div.col.d-flex.justify-content-between
                       button.btn.btn-outline-secondary.mb-3.mt-3#btnPrint(type="button" data-bs-toggle="collapse" data-bs-target="#collapseOptions" aria-expanded="false" aria-controls="collapseExample") Настройки
-                      div.form-check.form-check-inline
-                        input.form-check-input(id="rowLen33", type="radio", name="rowLen", value="33")
-                        label.form-check-label(for="rowLen33") 33
-                      div.form-check.form-check-inline
-                        input.form-check-input(id="rowLen42", type="radio", name="rowLen", value="42")
-                        label.form-check-label(for="rowLen42") 42
-                      div.form-check.form-check-inline
-                        input.form-check-input(id="rowLen56", type="radio", name="rowLen", value="56", checked)
-                        label.form-check-label(for="rowLen56") 56
+                      button.btn.btn-outline-primary.mb-3.mt-3.mr-5#btnSave Сохранить
+                      button.btn.btn-outline-primary.mb-3.mt-3#btnSaveAward Сохранить в награды
+
 
                   div.row
                     div.col.collapse#collapseOptions
