@@ -106,8 +106,12 @@ $(() => {
         const lineSpacingStr = $('input[name=lineSpacing]').val();
         const charFontStr = $('input[name=charFont]:checked').val();
         const cpiModeStr = $('input[name=cpiMode]:checked').val();
+        const raw = $('input[name=raw]').val();
 
         const title = $('input[name=title]').val();
+
+        // console.log("raw", raw);
+
 
         $.post("/print", {
             action,
@@ -117,6 +121,7 @@ $(() => {
             lineSpacing: lineSpacingStr,
             charFont: charFontStr,
             cpiMode: cpiModeStr,
+            raw
         }, (data) => {
             console.log("data", data);
             if (!data.success) {
@@ -321,4 +326,89 @@ $(() => {
 
 
         });
+
+
+
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function(e) {
+                $('#hiddenImg').attr('src', e.target.result);
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function u8arrayBufferToBase64(u8arr) {
+        var binary = '';
+        // var bytes = new Uint8Array( buffer );
+        var len = u8arr.byteLength;
+        for (var i = 0; i < len; i++) {
+            binary += String.fromCharCode(u8arr[i]);
+        }
+        return window.btoa(binary);
+    }
+
+    $('#hiddenImg').on("load", function() {
+        $(this).imageHalftone({
+            maxWidth: 550,
+            maxHeight: 1000,
+            output: 'canvas',
+            target: function($newCanvas, raw) {
+                $("#bgTextForPrint, #textForPrint").hide();
+                $("#imageContainer").show().empty();
+                $newCanvas.appendTo('#imageContainer');
+                // const ctx = $newCanvas[0].getContext('2d');
+                // const imgData = ctx.getImageData();
+                // RGBA
+                console.log(raw);
+
+                const byteRowLen = Math.ceil(raw.width / 8);
+                const printArray = new Uint8Array(byteRowLen * raw.height);
+                let arrayPos = 0;
+                for (let y = 0; y < raw.height; y++) {
+                    let b = 0;
+                    let curBit = 7;
+                    for (let x = 0; x < raw.width; x++) {
+                        const r = raw.data[y * raw.width * 4 + x * 4] < 127 ? 1 : 0;
+
+                        b |= r << curBit;
+
+                        if (curBit === 0 || x === raw.width - 1) {
+                            printArray[arrayPos] = b;
+                            arrayPos++;
+                            // printArray.push(b);
+                            b = 0;
+                            curBit = 7;
+                        } else {
+                            curBit--;
+                        }
+                    }
+                }
+
+                const mode = 0;
+                const xL = byteRowLen;
+                const xH = 0;
+                const yL = raw.height & 0xFF;
+                const yH = (raw.height >> 8) & 0xFF;
+
+                const header = new Uint8Array([0x1d, 0x76, 0x30, mode, xL, xH, yL, yH]);
+
+                const allBuf = new Uint8Array([...header, ...printArray]);
+                const b64 = u8arrayBufferToBase64(allBuf);
+
+                $('input[name=raw]').val(b64);
+
+                console.log(printArray);
+                console.log(b64);
+            }
+        });
+    });
+
+
+    $("#imgInp").on("change", function() {
+        readURL(this);
+    });
 });

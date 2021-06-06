@@ -50,3 +50,11 @@ textarea.print-row-len-42 {
 textarea.print-row-len-33 {
     transform: scaleX(1.7);
 }
+
+#imageContainer {
+    display: none;
+}
+
+#hiddenImg {
+    display: none;
+}

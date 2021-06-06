@@ -13,13 +13,14 @@ block content
             div.col
               div.container-fluid
                 form#formPrint(action='/print', method='POST')
+                  input(type="hidden", name="raw")
                   div.row
-                    div.col
+                    div.col#preview
                     
                       textarea.bg-text-for-print.print-row-len-56#bgTextForPrint(cols="60", rows="20", disabled="disabled", value="")
                       textarea.text-for-print.print-row-len-56#textForPrint(name="textForPrint", cols="60", rows="20", value="") 
                       // button.btn.btn-primary Печать временная
-
+                      div#imageContainer
 
                   div.row
                     div.col.d-flex.justify-content-between
@@ -136,6 +137,10 @@ block content
 
       div.col
         div.container-fluid.prints
+          div.row
+            div.col
+              input(type='file' id="imgInp")
+              img(id="hiddenImg" src="#" alt="your image", style="width:200px")
           div.row
             div.col
               h3 Награды

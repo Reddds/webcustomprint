@@ -32,6 +32,7 @@ You can use following commands to check service status and stop it
 
 Following commands can be used to do same
 `service webcustomprint start` `service webcustomprint status` `service webcustomprint stop`
+`service webcustomprint restart`
 
 Autostart
 `sudo systemctl enable webcustomprint`

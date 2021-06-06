@@ -46,9 +46,10 @@ const router = express.Router();
 
 /* GET home page. */
 router.get('/', (req, res, next) => {
-    res.send('Результат печати');
-    // res.render('print', { title: 'Печать' });
+    res.render('print', { title: 'Печать' });
 });
+
+
 
 router.post('/', (req, res, next) => {
     // console.log(req);
@@ -74,6 +75,9 @@ router.post('/', (req, res, next) => {
     console.log("lineSpacing", req.body.lineSpacing);
     console.log("charFont", req.body.charFont);
     console.log("cpiMode", req.body.cpiMode);
+    console.log("raw", req.body.raw);
+
+    const raw = req.body.raw;
 
     const forPrint: printedModel = {
         title: title ?? new Date().toISOString(),
@@ -85,25 +89,33 @@ router.post('/', (req, res, next) => {
     }
 
     try {
-        fs.writeFileSync(savedFile, JSON.stringify(forPrint));
 
-        if (action === "print") {
-            const setupBuf = new Uint8Array([
-                0x1b, 0x21, forPrint.printMode,
-                0x1b, 0x33, forPrint.lineSpacing,
-                0x1b, 0x4d, forPrint.charFont,
-                0x1b, 0xc1, forPrint.cpiMode]);
-
-            // const encoder = new TextEncoder();
-            // encoder.encoding= "CP866";
-            const textBytes = cp866buffer.encode(textForPrint);
-            // const textBytes = encoder.encode(textForPrint);
-            const fullBuf = new Uint8Array([...setupBuf, ...textBytes]);
-
+        if (raw) {
+            console.log("printing raw...");
+            const fullBuf = new Uint8Array(Buffer.from(raw, 'base64'));
             const bufWithCut = new Uint8Array([...fullBuf, ...cutAndEject]);
             fs.writeFileSync(printerFile, bufWithCut);
-        }
+        } else {
 
+            fs.writeFileSync(savedFile, JSON.stringify(forPrint));
+
+            if (action === "print") {
+                const setupBuf = new Uint8Array([
+                    0x1b, 0x21, forPrint.printMode,
+                    0x1b, 0x33, forPrint.lineSpacing,
+                    0x1b, 0x4d, forPrint.charFont,
+                    0x1b, 0xc1, forPrint.cpiMode]);
+
+                // const encoder = new TextEncoder();
+                // encoder.encoding= "CP866";
+                const textBytes = cp866buffer.encode(textForPrint);
+                // const textBytes = encoder.encode(textForPrint);
+                const fullBuf = new Uint8Array([...setupBuf, ...textBytes]);
+
+                const bufWithCut = new Uint8Array([...fullBuf, ...cutAndEject]);
+                fs.writeFileSync(printerFile, bufWithCut);
+            }
+        }
 
     } catch (err) {
         console.log(err);
