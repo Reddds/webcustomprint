@@ -112,7 +112,11 @@ $(() => {
 
         // console.log("raw", raw);
 
-
+        $("#busyIndicatorLabel, #busyIndicatorAltLabel").text(action === "print" ? "Печать" : "Обработка");
+        const busyIndicator = new bootstrap.Modal(document.getElementById('busyIndicator'), {
+            keyboard: false
+        });
+        busyIndicator.show();
         $.post("/print", {
             action,
             title,
@@ -128,14 +132,29 @@ $(() => {
                 alert(`Ошибка печати\n${data.message}`);
                 return;
             }
-            alert("Готово");
+            // console.log("busyIndicator", busyIndicator);
+            busyIndicator.hide();
+            // if (action !== "print") {
+            //     alert("Готово");
+            // }
         }, "json");
+    }
+
+    function Print() {
+        Send("print");
     }
 
     $("#btnPrint").on("click", (e) => {
         e.stopPropagation();
         e.preventDefault();
-        Send("print");
+        Print();
+    });
+
+    $(document).on("keypress", function(event) {
+        if (event.which == 13) {
+            event.preventDefault();
+            Print();
+        }
     });
 
     $("#btnSave").on("click", (e) => {
@@ -329,7 +348,7 @@ $(() => {
 
     document.onpaste = function(event) {
         var items = (event.clipboardData || event.originalEvent.clipboardData).items;
-        // console.log(JSON.stringify(items)); // might give you mime types
+        console.log(JSON.stringify(items)); // might give you mime types
         for (var index in items) {
             var item = items[index];
             if (item.kind === 'file') {
