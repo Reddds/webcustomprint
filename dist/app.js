@@ -11,6 +11,7 @@ const morgan_1 = __importDefault(require("morgan"));
 // import * as pug from 'pug';
 const index_1 = __importDefault(require("./index"));
 const print_1 = __importDefault(require("./print"));
+const shoppinglist_1 = __importDefault(require("./shoppinglist"));
 const users_1 = __importDefault(require("../routes/users"));
 const app = express_1.default();
 // app.engine('pug', pug.__express)
@@ -24,6 +25,7 @@ app.use(cookie_parser_1.default());
 app.use(express_1.default.static(__dirname)); // path.join(__dirname, 'public')
 app.use('/', index_1.default);
 app.use('/users', users_1.default);
+app.use('/shoppinglist', shoppinglist_1.default);
 app.use('/print', print_1.default);
 app.use("/bootstrap", express_1.default.static(path_1.default.join(__dirname, '../node_modules/bootstrap/dist')));
 app.use("/jquery", express_1.default.static(path_1.default.join(__dirname, '../node_modules/jquery/dist')));

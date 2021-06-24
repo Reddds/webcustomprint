@@ -58,3 +58,11 @@ textarea.print-row-len-33 {
 #hiddenImg {
     display: none;
 }
+
+
+/* ================================================================================ */
+
+img.prod-img {
+    width: 50px;
+    margin-right: 10px;
+}

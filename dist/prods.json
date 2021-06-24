@@ -1,0 +1,52 @@
+{
+    "groups": [
+        { "id": 0, "name": "МЯСО И РЫБА" },
+        { "id": 1, "name": "ФРУКТЫ И ОВОЩИ" },
+        { "id": 2, "name": "ХЛЕБОБУЛОЧНЫЕ" },
+        { "id": 3, "name": "СОУСЫ" },
+        { "id": 4, "name": "СПЕЦИИ" },
+        { "id": 5, "name": "БАКАЛЕЯ" },
+        { "id": 6, "name": "СЛАДОСТИ" },
+        { "id": 7, "name": "КОНСЕРВЫ" },
+        { "id": 8, "name": "ЗАМОРОЖЕННЫЕ ПРОДУКТЫ" },
+        { "id": 9, "name": "МОЛОЧНЫЕ" },
+        { "id": 10, "name": "БЫТ" },
+        { "id": 11, "name": "КОСМЕТИКА" },
+        { "id": 12, "name": "ЖИВОТНЫМ" },
+        { "id": 13, "name": "КАНЦТОВАРЫ" }
+    ],
+    "prods": [
+        { "id": 0, "groupId": 0, "name": "Бедро куриное без кости", "image": "bedrobezkosti" },
+        { "id": 1, "groupId": 0, "name": "Колбаса", "image": "kolbasa" },
+
+        { "id": 100, "groupId": 1, "name": "Помидоры розовые", "image": "pomidorRoz" },
+        { "id": 101, "groupId": 1, "name": "Помидоры жёлтые", "image": "pomidorJel" },
+        { "id": 102, "groupId": 1, "name": "Помидоры черри", "image": "pomidorCherry" },
+
+        { "id": 110, "groupId": 1, "name": "Огурцы", "image": "ogurez" },
+
+        { "id": 120, "groupId": 1, "name": "Яблоки", "image": "jabloki" },
+        { "id": 121, "groupId": 1, "name": "Персики", "image": "persiki" },
+        { "id": 122, "groupId": 1, "name": "Абрикосы", "image": "abrikosy" },
+
+        { "id": 123, "groupId": 1, "name": "Лук репчатый", "image": "lukRep" },
+        { "id": 124, "groupId": 1, "name": "Лук порей", "image": "lukPorey" },
+
+        { "id": 300, "groupId": 3, "name": "Майонез", "image": "majonase" },
+        { "id": 301, "groupId": 3, "name": "Кетчуп", "image": "ketchup" },
+        { "id": 302, "groupId": 3, "name": "Сметана", "image": "smetana" },
+        { "id": 303, "groupId": 3, "name": "Масло растительное без запаха", "image": "masloRast" },
+        { "id": 304, "groupId": 3, "name": "Масло растительное с запахом", "image": "masloRast" },
+
+        { "id": 200, "groupId": 2, "name": "Батон", "image": "baton" },
+        { "id": 201, "groupId": 2, "name": "Чёрный", "image": "hleb" },
+
+        { "id": 600, "groupId": 6, "name": "Сырки", "image": "syrok" },
+
+        { "id": 800, "groupId": 8, "name": "Пельмени", "image": "pelmeni" },
+
+        { "id": 900, "groupId": 9, "name": "Масло сливочное", "image": "masloSliv" },
+        { "id": 901, "groupId": 9, "name": "Молоко", "image": "moloko" },
+        { "id": 902, "groupId": 9, "name": "Снежок", "image": "snejok" }
+    ]
+}

@@ -5,7 +5,8 @@
     "scripts": {
         "compile": "tsc",
         "compile.and.start": "tsc && DEBUG=myapp:* node ./bin/www",
-        "start": "DEBUG=myapp:* node ./bin/www"
+        "start": "DEBUG=myapp:* node ./bin/www",
+        "start:win": "tsc & set DEBUG=express:* & node ./bin/www"
     },
     "dependencies": {
         "@types/bootstrap": "^5.0.14",

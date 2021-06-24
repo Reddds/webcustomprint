@@ -7,6 +7,7 @@ import logger from 'morgan';
 
 import indexRouter from "./index";
 import printRouter from "./print";
+import shoppinglistRouter from "./shoppinglist";
 import usersRouter from "../routes/users";
 
 const app = express();
@@ -24,6 +25,7 @@ app.use(express.static(__dirname)); // path.join(__dirname, 'public')
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/shoppinglist', shoppinglistRouter);
 app.use('/print', printRouter);
 
 app.use("/bootstrap", express.static(path.join(__dirname, '../node_modules/bootstrap/dist')));

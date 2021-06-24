@@ -1,0 +1,38 @@
+extends layout
+
+
+
+
+block content
+  div.container-fluid
+    h1= title
+      button.btn.btn-primary.ms-5#printBtn Печать
+      button.btn.btn-outline-secondary.ms-5#clearBtn Очистить
+
+    each groupView in groupsView
+      p.mt-3=groupView.groupName
+      //- var prodInCol = 0;
+      div.d-flex.justify-content-start
+        each prod in groupView.prods  
+          - prodInCol++;
+          div.me-3
+            - var id = `prod_${prod.id}`;
+            input.btn-check.prod-btn(type="checkbox", id=id, autocomplete="off", data-name=prod.name, data-group-id=groupView.groupId, data-group-name=groupView.groupName)
+            label.btn.btn-outline-primary(for=id)
+              if prod.image 
+                img.prod-img(src=`/images/prods/${prod.image}.webp`, alt=prod.name)
+              else  
+                img.prod-img(src=`/images/prods/empty.png`, alt=prod.name)
+              span=prod.name
+
+  div.modal#busyIndicator(data-bs-backdrop="static", data-bs-keyboard="false", tabindex="-1", aria-labelledby="staticBackdropLabel", aria-hidden="true")
+    div.modal-dialog.modal-dialog-centered
+      div.modal-content
+        div.modal-header
+          h5.modal-title#busyIndicatorLabel
+        div.modal-body
+          div.spinner-border(style="width: 3rem; height: 3rem;", role="status")
+            span.visually-hidden#busyIndicatorAltLabel
+
+  //- block scripts
+  script(src='./shoppinglist.page.js')

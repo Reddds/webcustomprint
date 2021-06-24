@@ -68,7 +68,7 @@ $(() => {
             const $cardForPrint = $(this).closest("div.card.for-print");
             let content = $("p.print-content", $cardForPrint).text();
 
-            var date = new Date();
+            const date = new Date();
             content = content.replace("##DATA##", date.dd_mm_yy())
 
             $("#textForPrint").val(content);
