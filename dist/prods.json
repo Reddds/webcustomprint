@@ -1,7 +1,8 @@
 {
     "groups": [
         { "id": 0, "name": "МЯСО И РЫБА" },
-        { "id": 1, "name": "ФРУКТЫ И ОВОЩИ" },
+        { "id": 1, "name": "ОВОЩИ" },
+        { "id": 14, "name": "ФРУКТЫ" },
         { "id": 2, "name": "ХЛЕБОБУЛОЧНЫЕ" },
         { "id": 3, "name": "СОУСЫ" },
         { "id": 4, "name": "СПЕЦИИ" },
@@ -10,6 +11,7 @@
         { "id": 7, "name": "КОНСЕРВЫ" },
         { "id": 8, "name": "ЗАМОРОЖЕННЫЕ ПРОДУКТЫ" },
         { "id": 9, "name": "МОЛОЧНЫЕ" },
+        { "id": 15, "name": "ДРУГОЕ" },
         { "id": 10, "name": "БЫТ" },
         { "id": 11, "name": "КОСМЕТИКА" },
         { "id": 12, "name": "ЖИВОТНЫМ" },
@@ -25,9 +27,13 @@
 
         { "id": 110, "groupId": 1, "name": "Огурцы", "image": "ogurez" },
 
-        { "id": 120, "groupId": 1, "name": "Яблоки", "image": "jabloki" },
-        { "id": 121, "groupId": 1, "name": "Персики", "image": "persiki" },
-        { "id": 122, "groupId": 1, "name": "Абрикосы", "image": "abrikosy" },
+        { "id": 120, "groupId": 1, "name": "Мокровь", "image": "morkov" },
+
+        { "id": 130, "groupId": 1, "name": "Кабачки", "image": "kabachki" },
+
+        { "id": 1420, "groupId": 14, "name": "Яблоки", "image": "jabloki" },
+        { "id": 1421, "groupId": 14, "name": "Персики", "image": "persiki" },
+        { "id": 1422, "groupId": 14, "name": "Абрикосы", "image": "abrikosy" },
 
         { "id": 123, "groupId": 1, "name": "Лук репчатый", "image": "lukRep" },
         { "id": 124, "groupId": 1, "name": "Лук порей", "image": "lukPorey" },
@@ -42,11 +48,14 @@
         { "id": 201, "groupId": 2, "name": "Чёрный", "image": "hleb" },
 
         { "id": 600, "groupId": 6, "name": "Сырки", "image": "syrok" },
+        { "id": 601, "groupId": 6, "name": "Пирожки", "image": "pirozki" },
 
         { "id": 800, "groupId": 8, "name": "Пельмени", "image": "pelmeni" },
 
         { "id": 900, "groupId": 9, "name": "Масло сливочное", "image": "masloSliv" },
         { "id": 901, "groupId": 9, "name": "Молоко", "image": "moloko" },
-        { "id": 902, "groupId": 9, "name": "Снежок", "image": "snejok" }
+        { "id": 902, "groupId": 9, "name": "Снежок", "image": "snejok" },
+
+        { "id": 1500, "groupId": 15, "name": "Вода для студии", "image": "voda19l" }
     ]
 }
