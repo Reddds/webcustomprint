@@ -2,20 +2,16 @@ Web service for print on connected Custom VKP80 printer on Linux.
 
 Printer connected by USB and present as /dev/usb/lp0
 
-Need access
+# Installation
 
-~~sudo chmod +777 /dev/usb/lp0~~
+`npm install`
+`sudo ./install.sh`
 
-`sudo usermod -a -G lp pi`
+# For manual test
+
+`npm run start`
 
 
-For autostart add to /etc/rc.local before `exit 0`
-
-`
-# autoran print service
-cd /home/pi/share/Custom/webcustomprint
-npm run start
-`
 
 Copy or make link "webcustomprint.service" to "/lib/systemd/system"
 
@@ -36,3 +32,7 @@ Following commands can be used to do same
 
 Autostart
 `sudo systemctl enable webcustomprint`
+
+
+# Webpage
+At address <ip address>:3000

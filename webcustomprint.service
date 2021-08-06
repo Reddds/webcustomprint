@@ -5,8 +5,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=pi
-ExecStart=/usr/bin/node /home/pi/share/Custom/webcustomprint/bin/www
+User=##CUR_USER_NAME##
+ExecStart=/usr/bin/node ##FULL_PATH_TO_DIR##/bin/www
 Restart=on-failure
 
 [Install]
