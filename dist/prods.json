@@ -34,6 +34,7 @@
         { "id": 1420, "groupId": 14, "name": "Яблоки", "image": "jabloki" },
         { "id": 1421, "groupId": 14, "name": "Персики", "image": "persiki" },
         { "id": 1422, "groupId": 14, "name": "Абрикосы", "image": "abrikosy" },
+        { "id": 1423, "groupId": 14, "name": "Бананы", "image": "bananas" },
 
         { "id": 123, "groupId": 1, "name": "Лук репчатый", "image": "lukRep" },
         { "id": 124, "groupId": 1, "name": "Лук порей", "image": "lukPorey" },
