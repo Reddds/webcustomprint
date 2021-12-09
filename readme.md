@@ -7,11 +7,12 @@ Printer connected by USB and present as /dev/usb/lp0
 `npm install`
 `sudo ./install.sh`
 
+# Webpage
+At address <ip address>:3000
+
 # For manual test
 
 `npm run start`
-
-
 
 Copy or make link "webcustomprint.service" to "/lib/systemd/system"
 
@@ -34,5 +35,3 @@ Autostart
 `sudo systemctl enable webcustomprint`
 
 
-# Webpage
-At address <ip address>:3000

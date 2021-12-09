@@ -1,6 +1,6 @@
 import express from 'express';
 import fs, { PathLike } from "fs";
-import { printedModel } from "./print";
+import { printedModel } from "./printerutils";
 
 
 const router = express.Router();

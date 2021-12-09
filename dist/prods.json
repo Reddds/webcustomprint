@@ -56,6 +56,10 @@
         { "id": 900, "groupId": 9, "name": "Масло сливочное", "image": "masloSliv" },
         { "id": 901, "groupId": 9, "name": "Молоко", "image": "moloko" },
         { "id": 902, "groupId": 9, "name": "Снежок", "image": "snejok" },
+        { "id": 903, "groupId": 9, "name": "Творог", "image": "tvorog" },
+
+        { "id": 1100, "groupId": 11, "name": "Зубная паста", "image": "zubPasta" },
+        { "id": 1101, "groupId": 11, "name": "Зубная щётка", "image": "zubSchetka" },
 
         { "id": 1500, "groupId": 15, "name": "Вода для студии", "image": "voda19l" }
     ]

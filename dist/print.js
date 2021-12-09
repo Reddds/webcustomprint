@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const fs_1 = __importDefault(require("fs"));
-const node_cp866buffer_1 = __importDefault(require("node-cp866buffer"));
+const printerutils_1 = require("./printerutils");
 /*if (!Date.prototype.toISOString) {
     (() => {
 
@@ -41,9 +41,7 @@ router.post('/', (req, res, next) => {
     console.log("action", action);
     const dir = action === "saveAward" ? "printSrc" : "prints";
     const savedFile = `${__dirname}/${dir}/print_${Date.now()}`; // "/dev/usb/lp0";
-    const printerFile = "/dev/usb/lp0";
     const textForPrint = req.body.textForPrint;
-    const cutAndEject = new Uint8Array([0x0a, 0x1b, 0x69, 0x1d, 0x65, 0x05]);
     const printModeVal = parseInt(req.body.printMode, 10);
     const lineSpacingVal = parseInt(req.body.lineSpacing, 10);
     const charFontVal = parseInt(req.body.charFont, 10);
@@ -65,27 +63,28 @@ router.post('/', (req, res, next) => {
     };
     try {
         if (raw) {
-            console.log("printing raw...");
-            const fullBuf = new Uint8Array(Buffer.from(raw, 'base64'));
-            const bufWithCut = new Uint8Array([...fullBuf, ...cutAndEject]);
-            fs_1.default.writeFileSync(printerFile, bufWithCut);
+            printerutils_1.PrintRaw(raw);
+            // console.log("printing raw...");
+            // const fullBuf = new Uint8Array(Buffer.from(raw, 'base64'));
+            // const bufWithCut = new Uint8Array([...fullBuf, ...cutAndEject]);
+            // fs.writeFileSync(printerFile, bufWithCut);
         }
         else {
             fs_1.default.writeFileSync(savedFile, JSON.stringify(forPrint));
             if (action === "print") {
-                const setupBuf = new Uint8Array([
-                    0x1b, 0x21, forPrint.printMode,
-                    0x1b, 0x33, forPrint.lineSpacing,
-                    0x1b, 0x4d, forPrint.charFont,
-                    0x1b, 0xc1, forPrint.cpiMode
-                ]);
-                // const encoder = new TextEncoder();
-                // encoder.encoding= "CP866";
-                const textBytes = node_cp866buffer_1.default.encode(textForPrint);
-                // const textBytes = encoder.encode(textForPrint);
-                const fullBuf = new Uint8Array([...setupBuf, ...textBytes]);
-                const bufWithCut = new Uint8Array([...fullBuf, ...cutAndEject]);
-                fs_1.default.writeFileSync(printerFile, bufWithCut);
+                printerutils_1.PrintText(textForPrint, forPrint);
+                // const setupBuf = new Uint8Array([
+                //     0x1b, 0x21, forPrint.printMode,
+                //     0x1b, 0x33, forPrint.lineSpacing,
+                //     0x1b, 0x4d, forPrint.charFont,
+                //     0x1b, 0xc1, forPrint.cpiMode]);
+                // // const encoder = new TextEncoder();
+                // // encoder.encoding= "CP866";
+                // const textBytes = cp866buffer.encode(textForPrint);
+                // // const textBytes = encoder.encode(textForPrint);
+                // const fullBuf = new Uint8Array([...setupBuf, ...textBytes]);
+                // const bufWithCut = new Uint8Array([...fullBuf, ...cutAndEject]);
+                // fs.writeFileSync(printerFile, bufWithCut);
             }
         }
     }
