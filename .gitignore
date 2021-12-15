@@ -84,3 +84,5 @@ dist/print.js.map
 dist/index.js.map
 dist/index.js
 dist/printSrc/print_1622064335039
+db_src/uhtt_barcode_ref_all.csv
+db/barcodes.db

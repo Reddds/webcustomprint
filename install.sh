@@ -5,6 +5,11 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+if [ ! -f /usr/bin/node ]; then
+   echo "Creating /usr/bin/node symlink to current version"
+   sudo ln -s "$(which node)" /usr/bin/node
+fi
+
 myip=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'`
 
 DEST_SERV=/lib/systemd/system/webcustomprint.service

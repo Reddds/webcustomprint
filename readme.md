@@ -10,6 +10,28 @@ Printer connected by USB and present as /dev/usb/lp0
 # Webpage
 At address <ip address>:3000
 
+# database
+
+sqlite> .mode csv
+sqlite> .separator "\t" ---IMPORTANT! should be in double quotes
+sqlite> .import ../db_src/uhtt_barcode_ref_all.csv barcodes
+
+# voice
+```
+add-apt-repository ppa:linvinus/rhvoice
+sudo apt-get update
+
+2) Как модуль speech-dispatcher
+   sudo apt-get install speech-dispatcher-rhvoice rhvoice-russian
+
+2) Если вы установили пакет speech-dispatcher-rhvoice то нужно выполнить команду
+echo "Проверка синтезатора речи" | spd-say -o rhvoice -l ru  -e -t female1
+
+
+spd-say -o rhvoice -l ru  -t male1 -r -30 "Проверка синтезатора речи"
+
+```
+
 # For manual test
 
 `npm run start`
@@ -28,8 +50,15 @@ You can use following commands to check service status and stop it
 `sudo systemctl status webcustomprint` `sudo systemctl stop webcustomprint`
 
 Following commands can be used to do same
-`service webcustomprint start` `service webcustomprint status` `service webcustomprint stop`
+`service webcustomprint start` 
+`service webcustomprint stop`
 `service webcustomprint restart`
+
+Status
+`service webcustomprint status` 
+```bash
+journalctl -u  webcustomprint -b -e
+```
 
 Autostart
 `sudo systemctl enable webcustomprint`

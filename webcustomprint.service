@@ -6,7 +6,9 @@ After=network.target
 [Service]
 Type=simple
 User=##CUR_USER_NAME##
+# ExecStart=node ##FULL_PATH_TO_DIR##/bin/www
 ExecStart=/usr/bin/node ##FULL_PATH_TO_DIR##/bin/www
+# ExecStart=/usr/bin/nodejs ##FULL_PATH_TO_DIR##/bin/www
 Restart=on-failure
 
 [Install]

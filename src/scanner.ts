@@ -1,6 +1,8 @@
 import usbDetect from 'usb-detection';
 import SerialPort from "serialport";
 import { printedModel, PrintRaw, PrintText, page33 } from "./printerutils";
+import { BarcodeDb } from "./barcodedb";
+import { exec } from "child_process";
 
 // SerialPort.parsers = {
 //     ByteLength: require('@serialport/parser-byte-length'),
@@ -14,12 +16,23 @@ import { printedModel, PrintRaw, PrintText, page33 } from "./printerutils";
 module.exports = class Scanner {
 
     private port: SerialPort;
+    private barcodeDb: BarcodeDb;
     // /**
     //  *
     //  */
     // constructor() {
 
     // }
+
+    private WrapText(str: string, lineLen: number): string {
+        let res = "";
+        while (str.length > lineLen) {
+            res += str.substring(0, lineLen) + "\n";
+            str = str.substring(lineLen);
+        }
+        res += str;
+        return res;
+    }
 
     private InitSerialPort(): void {
         const parser = new SerialPort.parsers.Readline({ delimiter: "\r", encoding: "utf8" });
@@ -37,8 +50,24 @@ module.exports = class Scanner {
         // })
 
         this.port.pipe(parser);
-        parser.on('data', (data) => {
-            PrintText(`Отсканировано:\n${data}`, page33);
+        parser.on('data', async (data) => {
+            console.log("Scanned", data);
+            const barcodeData = await this.barcodeDb.GetBarcodeData(data);
+            if (!barcodeData || barcodeData.length === 0) {
+                // this.ScannerBadBell();
+                this.Say("Ничего не найдено");
+                // PrintText(`Отсканировано:\n${data}`, page33);
+            }
+            else {
+
+                barcodeData.forEach(barData => {
+                    this.Say(barData.Name); //"Найдено! " + 
+                    const textForPring = `${this.WrapText(barData.Name, 33)}\n\n${this.WrapText(barData.CategoryName, 33)}\n\n${this.WrapText(barData.BrandName, 33)}`;
+                    console.log("barData.Name", barData.Name);
+                    // console.log(textForPring);
+                    // PrintText(textForPring, page33);
+                });
+            }
         });
     }
 
@@ -60,7 +89,28 @@ module.exports = class Scanner {
         });
     }
 
-    public Init() {
+    private Say(str: string) {
+        exec(`spd-say -o rhvoice -l ru  -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
+            if (error) {
+                console.log(`error: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.log(`stderr: ${stderr}`);
+                return;
+            }
+            console.log(`stdout: ${stdout}`);
+        });
+    }
+
+    public async Init() {
+        this.barcodeDb = new BarcodeDb();
+
+        await this.barcodeDb.OpenDb();
+
+        const barcodeData = await this.barcodeDb.GetBarcodeData("7622201771027");
+        console.log(barcodeData);
+
         console.log("Init scanner monitoring...");
         //  Detect scanner 05f9:4204
         usbDetect.startMonitoring();
@@ -89,6 +139,24 @@ module.exports = class Scanner {
         });
 
         this.InitSerialPort();
+
+        this.Say("Программа запущена");
+
+    }
+
+    public ScannerGoodBell(): void {
+        if (!this.port.isOpen) {
+            return;
+        }
+        this.port.write([0x42]);
+    }
+
+    public ScannerBadBell(): void {
+        if (!this.port.isOpen) {
+            return;
+        }
+        this.port.write([0x46]);
+        this.port.write([0x45]);
     }
 
 }
