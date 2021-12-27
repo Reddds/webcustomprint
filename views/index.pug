@@ -26,7 +26,7 @@ block content
 
                   div.row
                     div.col.d-flex.justify-content-between
-                      button.btn.btn-primary.mb-3.mt-3.mr-5#btnPrint Печать (Enter)
+                      button.btn.btn-primary.mb-3.mt-3.mr-5#btnPrint Печать
                       button.btn.btn-outline-secondary.mb-3.mt-3.mr-5#btnShowAdditional(type="button", data-bs-toggle="collapse", data-bs-target=".collapseAdditional", aria-expanded="false", aria-controls="collapseAdditional") Дополнительно
                   
                   div.row.collapse.collapseAdditional
@@ -49,7 +49,12 @@ block content
 
                   div.row.collapse.collapseAdditional
                     div.col
-                      div.alert.alert-info(role="alert") Для подстановки даты надо вставить в шаблон "##DATA##"
+                      div.alert.alert-info(role="alert")
+                        | Для подстановки даты надо вставить в шаблон "##DATA##"<br/>
+                        strong Замена: <br/>
+                        |   [GS] - 0x1d<br/>
+                        |   [\x**] заменяются на HEX значения<br/>
+                        |   {CODE128:text} печатает ШК. Например: {CODE128:[HOMEPR]1} напечатает [HOMEPR]1 в виде ШК<br/>
 
                   div.row.collapse.collapseAdditional
                     div.col.d-flex.justify-content-between
@@ -60,6 +65,7 @@ block content
                   div.row.collapse.collapseAdditional
                     div.col.d-flex.justify-content-between
                       a(href="/shoppinglist") Список покупок
+                      a(href="/printbyqr") Настройки печати
 
                   div.row.collapse.collapseAdditional
                     div.col.collapse#collapseOptions

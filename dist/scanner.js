@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -14,8 +33,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const usb_detection_1 = __importDefault(require("usb-detection"));
 const serialport_1 = __importDefault(require("serialport"));
+const printerutils_1 = require("./printerutils");
 const barcodedb_1 = require("./barcodedb");
 const child_process_1 = require("child_process");
+const PrintByQr = __importStar(require("./printbyqr"));
 // SerialPort.parsers = {
 //     ByteLength: require('@serialport/parser-byte-length'),
 //     CCTalk: require('@serialport/parser-cctalk'),
@@ -55,6 +76,17 @@ module.exports = class Scanner {
         this.port.pipe(parser);
         parser.on('data', (data) => __awaiter(this, void 0, void 0, function* () {
             console.log("Scanned", data);
+            if (data.startsWith(PrintByQr.HomeQrPrefix)) {
+                const code = data.substring(PrintByQr.HomeQrPrefix.length);
+                const qrFound = this.printByQrSettings.find(qs => qs.Code === code);
+                if (!qrFound) {
+                    // this.ScannerBadBell();
+                    this.Say("Ничего не найдено");
+                    return;
+                }
+                printerutils_1.PrintText(this.WrapText(qrFound.Text, 33), printerutils_1.page33);
+                return;
+            }
             const barcodeData = yield this.barcodeDb.GetBarcodeData(data);
             if (!barcodeData || barcodeData.length === 0) {
                 // this.ScannerBadBell();
@@ -128,7 +160,11 @@ module.exports = class Scanner {
                 this.OpenPort();
             });
             this.InitSerialPort();
-            this.Say("Программа запущена");
+            // this.Say("Программа запущена");
+            this.printByQrSettings = PrintByQr.LoadQrSettings();
+            PrintByQr.SetOnReloadEvent((setts) => {
+                this.printByQrSettings = setts;
+            });
         });
     }
     ScannerGoodBell() {
@@ -143,6 +179,9 @@ module.exports = class Scanner {
         }
         this.port.write([0x46]);
         this.port.write([0x45]);
+    }
+    ReloadPrintByQrSettings() {
+        this.printByQrSettings = PrintByQr.LoadQrSettings();
     }
 };
 //# sourceMappingURL=scanner.js.map

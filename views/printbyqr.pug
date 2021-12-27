@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  h1
+    | Настройки печати по QR (префикс 
+    span= homeQrPrefix
+    | )
+  if alertStr
+    .alert.alert-primary(role="alert")= alertStr
+  form(action='', method='POST')
+    .mb-3
+        label.form-label(for="taList") Список соответствий
+        textarea.form-control#taList(name="printsettings", rows="3")=printsettings
+    input.btn.btn-primary(type='submit', value='Сохранить')

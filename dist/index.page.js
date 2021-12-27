@@ -150,12 +150,12 @@ $(() => {
         Print();
     });
 
-    $(document).on("keypress", function(event) {
-        if (event.which == 13) {
-            event.preventDefault();
-            Print();
-        }
-    });
+    // $(document).on("keypress", function(event) {
+    //     if (event.which == 13) {
+    //         event.preventDefault();
+    //         Print();
+    //     }
+    // });
 
     $("#btnSave").on("click", (e) => {
         e.stopPropagation();

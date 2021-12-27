@@ -3,6 +3,7 @@ import SerialPort from "serialport";
 import { printedModel, PrintRaw, PrintText, page33 } from "./printerutils";
 import { BarcodeDb } from "./barcodedb";
 import { exec } from "child_process";
+import * as PrintByQr from "./printbyqr";
 
 // SerialPort.parsers = {
 //     ByteLength: require('@serialport/parser-byte-length'),
@@ -17,6 +18,9 @@ module.exports = class Scanner {
 
     private port: SerialPort;
     private barcodeDb: BarcodeDb;
+
+    private printByQrSettings: PrintByQr.PrintByQrItem[];
+
     // /**
     //  *
     //  */
@@ -34,6 +38,8 @@ module.exports = class Scanner {
         return res;
     }
 
+
+
     private InitSerialPort(): void {
         const parser = new SerialPort.parsers.Readline({ delimiter: "\r", encoding: "utf8" });
         this.port = new SerialPort('/dev/ttyACM0', {
@@ -50,8 +56,21 @@ module.exports = class Scanner {
         // })
 
         this.port.pipe(parser);
-        parser.on('data', async (data) => {
+        parser.on('data', async (data: string) => {
             console.log("Scanned", data);
+
+            if(data.startsWith(PrintByQr.HomeQrPrefix)) {
+                const code = data.substring(PrintByQr.HomeQrPrefix.length);
+                const qrFound = this.printByQrSettings.find(qs => qs.Code === code);
+                if(!qrFound) {
+                    // this.ScannerBadBell();
+                    this.Say("Ничего не найдено");
+                    return;
+                }
+                PrintText(this.WrapText(qrFound.Text, 33), page33);
+                return;
+            }
+
             const barcodeData = await this.barcodeDb.GetBarcodeData(data);
             if (!barcodeData || barcodeData.length === 0) {
                 // this.ScannerBadBell();
@@ -140,8 +159,12 @@ module.exports = class Scanner {
 
         this.InitSerialPort();
 
-        this.Say("Программа запущена");
+        // this.Say("Программа запущена");
 
+        this.printByQrSettings = PrintByQr.LoadQrSettings();
+        PrintByQr.SetOnReloadEvent((setts) => {
+            this.printByQrSettings = setts;
+        });
     }
 
     public ScannerGoodBell(): void {
@@ -157,6 +180,10 @@ module.exports = class Scanner {
         }
         this.port.write([0x46]);
         this.port.write([0x45]);
+    }
+
+    public ReloadPrintByQrSettings() {
+        this.printByQrSettings = PrintByQr.LoadQrSettings();
     }
 
 }
