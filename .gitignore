@@ -86,3 +86,9 @@ dist/index.js
 dist/printSrc/print_1622064335039
 db_src/uhtt_barcode_ref_all.csv
 db/barcodes.db
+dist/chestznak.js.map
+dist/printerutils.js
+dist/printerutils.js.map
+dist/printSrc/printbyqr.json
+dist/scanner.js
+dist/scanner.js.map

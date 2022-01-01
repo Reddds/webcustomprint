@@ -37,6 +37,7 @@ const printerutils_1 = require("./printerutils");
 const barcodedb_1 = require("./barcodedb");
 const child_process_1 = require("child_process");
 const PrintByQr = __importStar(require("./printbyqr"));
+const chestznak_1 = require("./chestznak");
 // SerialPort.parsers = {
 //     ByteLength: require('@serialport/parser-byte-length'),
 //     CCTalk: require('@serialport/parser-cctalk'),
@@ -76,6 +77,8 @@ module.exports = class Scanner {
         this.port.pipe(parser);
         parser.on('data', (data) => __awaiter(this, void 0, void 0, function* () {
             console.log("Scanned", data);
+            // =================================================================
+            // Если ШК начинается с домашенго префикса
             if (data.startsWith(PrintByQr.HomeQrPrefix)) {
                 const code = data.substring(PrintByQr.HomeQrPrefix.length);
                 const qrFound = this.printByQrSettings.find(qs => qs.Code === code);
@@ -86,6 +89,35 @@ module.exports = class Scanner {
                 }
                 printerutils_1.PrintText(this.WrapText(qrFound.Text, 33), printerutils_1.page33);
                 return;
+            }
+            // =================================================================
+            // Пробуем через честный знак
+            try {
+                const prodInfo = yield chestznak_1.ChesZnak.GetData(data);
+                if (prodInfo) {
+                    console.log("prodInfo", prodInfo);
+                    yield this.Say(prodInfo.Name);
+                    if (prodInfo.ExpireDate) {
+                        const now = Date.now();
+                        const expDate = new Date(prodInfo.ExpireDate);
+                        const diff = prodInfo.ExpireDate - now;
+                        if (diff <= 0) {
+                            console.log("now", now);
+                            console.log("prodInfo.ExpireDate", prodInfo.ExpireDate);
+                            yield this.Say("Просрочено!");
+                        }
+                        else {
+                            // const dateStr = expDate.toLocaleDateString('ru-RU', { year: 'numeric', month: 'numeric', day: 'numeric' });
+                            const dateStr = `${expDate.getDate()} ${expDate.getMonth() + 1} ${expDate.getFullYear()}`;
+                            yield this.Say("Годен до");
+                            yield this.Say(dateStr);
+                        }
+                    }
+                    return;
+                }
+            }
+            catch (error) {
+                console.log(error);
             }
             const barcodeData = yield this.barcodeDb.GetBarcodeData(data);
             if (!barcodeData || barcodeData.length === 0) {
@@ -121,24 +153,31 @@ module.exports = class Scanner {
         });
     }
     Say(str) {
-        child_process_1.exec(`spd-say -o rhvoice -l ru  -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
-            if (error) {
-                console.log(`error: ${error.message}`);
-                return;
-            }
-            if (stderr) {
-                console.log(`stderr: ${stderr}`);
-                return;
-            }
-            console.log(`stdout: ${stdout}`);
+        return __awaiter(this, void 0, void 0, function* () {
+            str = str.replace("%", "процентов");
+            return yield new Promise((resolve, reject) => {
+                child_process_1.exec(`spd-say --wait -o rhvoice -l ru  -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
+                    if (error) {
+                        console.log(`error: ${error.message}`);
+                        return;
+                    }
+                    if (stderr) {
+                        console.log(`stderr: ${stderr}`);
+                        return;
+                    }
+                    console.log(`stdout: ${stdout}`);
+                    resolve();
+                });
+            });
         });
     }
     Init() {
         return __awaiter(this, void 0, void 0, function* () {
             this.barcodeDb = new barcodedb_1.BarcodeDb();
             yield this.barcodeDb.OpenDb();
-            const barcodeData = yield this.barcodeDb.GetBarcodeData("7622201771027");
-            console.log(barcodeData);
+            // Стартовые тесты
+            // const barcodeData = await this.barcodeDb.GetBarcodeData("7622201771027");
+            // console.log(barcodeData);
             console.log("Init scanner monitoring...");
             //  Detect scanner 05f9:4204
             usb_detection_1.default.startMonitoring();
