@@ -97,7 +97,8 @@ function ReplaceSpecialChars(text) {
     // штрихкоды
     text = text.replace(/\{CODE128:([^}]+)\}/g, (match, barcodeText, offset, str) => {
         const centerJust = "\x1d\x61\x01";
-        return `${centerJust}\x1d\x6b\x08\x7b\x42${barcodeText}\x00`;
+        const hriBelow = "\x1d\x48\x32";
+        return `${centerJust}${hriBelow}\x1d\x6b\x08\x7b\x42${barcodeText}\x00`;
     });
     // const hexMatch = text.match(/\[\\x([1-9a-fA-F]+)\]/);
     // if(hexMatch) {
