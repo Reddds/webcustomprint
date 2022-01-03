@@ -9,6 +9,7 @@ import indexRouter from "./index";
 import printRouter from "./print";
 import shoppinglistRouter from "./shoppinglist";
 import printbyqrRouter from "./printbyqr";
+import scanRouter from "./scan";
 import usersRouter from "../routes/users";
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/shoppinglist', shoppinglistRouter);
 app.use('/printbyqr', printbyqrRouter);
+app.use('/scan', scanRouter);
 app.use('/print', printRouter);
 
 app.use("/bootstrap", express.static(path.join(__dirname, '../node_modules/bootstrap/dist')));

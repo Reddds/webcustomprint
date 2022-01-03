@@ -1,5 +1,7 @@
 import usbDetect from 'usb-detection';
 import SerialPort from "serialport";
+import mysql from "mysql";
+
 import { printedModel, PrintRaw, PrintText, page33 } from "./printerutils";
 import { BarcodeDb } from "./barcodedb";
 import { exec } from "child_process";
@@ -15,8 +17,12 @@ import { ChesZnak } from "./chestznak";
 //     Regex: require('@serialport/parser-regex'),
 // };
 
-module.exports = class Scanner {
+// export function GetInstance(): Scanner {
+//     return Scanner.Instance;
+// }
 
+export class Scanner {
+    public static Instance: Scanner;
     private port: SerialPort;
     private barcodeDb: BarcodeDb;
 
@@ -29,7 +35,7 @@ module.exports = class Scanner {
 
     // }
 
-    private WrapText(str: string, lineLen: number): string {
+    private static WrapText(str: string, lineLen: number): string {
         let res = "";
         while (str.length > lineLen) {
             res += str.substring(0, lineLen) + "\n";
@@ -37,6 +43,71 @@ module.exports = class Scanner {
         }
         res += str;
         return res;
+    }
+
+    public async OnSacnned(data: string, format?: string): Promise<void> {
+        // =================================================================
+        // Если ШК начинается с домашенго префикса
+        if (data.startsWith(PrintByQr.HomeQrPrefix)) {
+            const code = data.substring(PrintByQr.HomeQrPrefix.length);
+            const qrFound = this.printByQrSettings.find(qs => qs.Code === code);
+            if (!qrFound) {
+                // this.ScannerBadBell();
+                Scanner.Say("Ничего не найдено");
+                return;
+            }
+            PrintText(Scanner.WrapText(qrFound.Text, 33), page33);
+            return;
+        }
+
+        // =================================================================
+        // Пробуем через честный знак
+        try {
+            const prodInfo = await ChesZnak.GetData(data);
+            if (prodInfo) {
+                console.log("prodInfo", prodInfo);
+                await Scanner.Say(prodInfo.Name);
+
+                if (prodInfo.ExpireDate) {
+                    const now = Date.now();
+                    const expDate = new Date(prodInfo.ExpireDate);
+                    const diff = prodInfo.ExpireDate - now;
+                    if (diff <= 0) {
+                        console.log("now", now);
+                        console.log("prodInfo.ExpireDate", prodInfo.ExpireDate);
+                        await Scanner.Say("Просрочено!");
+                    } else {
+                        // const dateStr = expDate.toLocaleDateString('ru-RU', { year: 'numeric', month: 'numeric', day: 'numeric' });
+                        const dateStr = `${expDate.getDate()} ${expDate.getMonth() + 1} ${expDate.getFullYear()}`;
+                        await Scanner.Say("Годен до");
+                        await Scanner.Say(dateStr);
+                    }
+                }
+
+                return;
+            }
+        } catch (error) {
+            console.log(error);
+        }
+
+
+
+        const barcodeData = await this.barcodeDb.GetBarcodeData(data);
+        if (!barcodeData || barcodeData.length === 0) {
+            // this.ScannerBadBell();
+            Scanner.Say("Ничего не найдено");
+            // PrintText(`Отсканировано:\n${data}`, page33);
+        }
+        else {
+
+            barcodeData.forEach(barData => {
+                Scanner.Say(barData.Name);
+                const textForPring = `${Scanner.WrapText(barData.Name, 33)}\n\n${Scanner.WrapText(barData.CategoryName, 33)}\n\n${Scanner.WrapText(barData.BrandName, 33)}`;
+                console.log("barData.Name", barData.Name);
+                // console.log(textForPring);
+                // PrintText(textForPring, page33);
+            });
+        }
     }
 
     private InitSerialPort(): void {
@@ -58,68 +129,7 @@ module.exports = class Scanner {
         parser.on('data', async (data: string) => {
             console.log("Scanned", data);
 
-            // =================================================================
-            // Если ШК начинается с домашенго префикса
-            if (data.startsWith(PrintByQr.HomeQrPrefix)) {
-                const code = data.substring(PrintByQr.HomeQrPrefix.length);
-                const qrFound = this.printByQrSettings.find(qs => qs.Code === code);
-                if (!qrFound) {
-                    // this.ScannerBadBell();
-                    this.Say("Ничего не найдено");
-                    return;
-                }
-                PrintText(this.WrapText(qrFound.Text, 33), page33);
-                return;
-            }
-
-            // =================================================================
-            // Пробуем через честный знак
-            try {
-                const prodInfo = await ChesZnak.GetData(data);
-                if (prodInfo) {
-                    console.log("prodInfo", prodInfo);
-                    await this.Say(prodInfo.Name);
-
-                    if (prodInfo.ExpireDate) {
-                        const now = Date.now();
-                        const expDate = new Date(prodInfo.ExpireDate);
-                        const diff = prodInfo.ExpireDate - now;
-                        if (diff <= 0) {
-                            console.log("now", now);
-                            console.log("prodInfo.ExpireDate", prodInfo.ExpireDate);
-                            await this.Say("Просрочено!");
-                        } else {
-                            // const dateStr = expDate.toLocaleDateString('ru-RU', { year: 'numeric', month: 'numeric', day: 'numeric' });
-                            const dateStr = `${expDate.getDate()} ${expDate.getMonth() + 1} ${expDate.getFullYear()}`;
-                            await this.Say("Годен до");
-                            await this.Say(dateStr);
-                        }
-                    }
-
-                    return;
-                }
-            } catch (error) {
-                console.log(error);
-            }
-
-
-
-            const barcodeData = await this.barcodeDb.GetBarcodeData(data);
-            if (!barcodeData || barcodeData.length === 0) {
-                // this.ScannerBadBell();
-                this.Say("Ничего не найдено");
-                // PrintText(`Отсканировано:\n${data}`, page33);
-            }
-            else {
-
-                barcodeData.forEach(barData => {
-                    this.Say(barData.Name); //"Найдено! " + 
-                    const textForPring = `${this.WrapText(barData.Name, 33)}\n\n${this.WrapText(barData.CategoryName, 33)}\n\n${this.WrapText(barData.BrandName, 33)}`;
-                    console.log("barData.Name", barData.Name);
-                    // console.log(textForPring);
-                    // PrintText(textForPring, page33);
-                });
-            }
+            this.OnSacnned(data);
         });
     }
 
@@ -141,7 +151,10 @@ module.exports = class Scanner {
         });
     }
 
-    private async Say(str: string) {
+    private static async Say(str: string) {
+        if(process.env.SILENCE === "1") {
+            return;
+        }
         str = str.replace("%", "процентов");
         return await new Promise<void>((resolve, reject) => {
             exec(`spd-say --wait -o rhvoice -l ru  -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
@@ -160,7 +173,26 @@ module.exports = class Scanner {
         });
     }
 
+
+    private InitMysql() {
+        try {
+            console.log('Get mysql connection ...');
+        const conn = mysql.createConnection({
+            database: 'prod',
+            host: "localhost"
+            
+          });
+        } catch (error) {
+            console.error(error);
+        }
+        
+    }
+
     public async Init() {
+        Scanner.Instance = this;
+
+        this.InitMysql();
+
         this.barcodeDb = new BarcodeDb();
 
         await this.barcodeDb.OpenDb();
@@ -229,3 +261,10 @@ module.exports = class Scanner {
 
 }
 
+
+
+// const ScannerInstance: Scanner = new Scanner();
+// ScannerInstance.Init();
+
+// export { ScannerInstance };
+// module.exports = ScannerInstance;

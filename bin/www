@@ -3,16 +3,20 @@
 /**
  * Module dependencies.
  */
-
+const os = require("os");
 const app = require('../dist/app');
 const debug = require('debug')('webcustomprint:server');
 const http = require('http');
 
 // const usbDetect = require('usb-detection');
 
-const scanner = require('../dist/scanner');
+const scanerSingleton = require('../dist/prodUtils');
+// import { Singleton } from "../dist/prodUtils";
 
-console.log("starting...");
+console.log("starting... with username", os.userInfo().username);
+if (process.env.SILENCE === "1") {
+    console.log("SILENCE mode");
+}
 /**
  * Get port from environment and store in Express.
  */
@@ -115,5 +119,7 @@ usbDetect.find(0x05f9, 0x4204, function(err, devices) {
     console.log('find', devices, err);
 });
 */
-const scannerWorker = new scanner();
-scannerWorker.Init();
+// const scannerWorker = new scanner();
+// scannerWorker.Init();
+
+//scanerSingleton.getInstance();

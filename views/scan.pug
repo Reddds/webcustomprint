@@ -1,0 +1,12 @@
+extends layout
+
+block content
+  h1 Тестовая страница для сканера
+  form(action='', method='POST')
+    .mb-3
+        label.form-label(for="scannedCode") Список соответствий
+        input.form-control#scannedCode(name="scannedCode")
+    .mb-3
+        label.form-label(for="scannedCodeFormat") Формат кода
+        input.form-control#scannedCodeFormat(name="scannedCodeFormat")
+    input.btn.btn-primary(type='submit', value='Загрузить')

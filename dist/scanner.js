@@ -31,8 +31,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Scanner = void 0;
 const usb_detection_1 = __importDefault(require("usb-detection"));
 const serialport_1 = __importDefault(require("serialport"));
+const mysql_1 = __importDefault(require("mysql"));
 const printerutils_1 = require("./printerutils");
 const barcodedb_1 = require("./barcodedb");
 const child_process_1 = require("child_process");
@@ -46,13 +48,16 @@ const chestznak_1 = require("./chestznak");
 //     Ready: require('@serialport/parser-ready'),
 //     Regex: require('@serialport/parser-regex'),
 // };
-module.exports = class Scanner {
+// export function GetInstance(): Scanner {
+//     return Scanner.Instance;
+// }
+class Scanner {
     // /**
     //  *
     //  */
     // constructor() {
     // }
-    WrapText(str, lineLen) {
+    static WrapText(str, lineLen) {
         let res = "";
         while (str.length > lineLen) {
             res += str.substring(0, lineLen) + "\n";
@@ -60,6 +65,67 @@ module.exports = class Scanner {
         }
         res += str;
         return res;
+    }
+    OnSacnned(data, format) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // =================================================================
+            // Если ШК начинается с домашенго префикса
+            if (data.startsWith(PrintByQr.HomeQrPrefix)) {
+                const code = data.substring(PrintByQr.HomeQrPrefix.length);
+                const qrFound = this.printByQrSettings.find(qs => qs.Code === code);
+                if (!qrFound) {
+                    // this.ScannerBadBell();
+                    Scanner.Say("Ничего не найдено");
+                    return;
+                }
+                printerutils_1.PrintText(Scanner.WrapText(qrFound.Text, 33), printerutils_1.page33);
+                return;
+            }
+            // =================================================================
+            // Пробуем через честный знак
+            try {
+                const prodInfo = yield chestznak_1.ChesZnak.GetData(data);
+                if (prodInfo) {
+                    console.log("prodInfo", prodInfo);
+                    yield Scanner.Say(prodInfo.Name);
+                    if (prodInfo.ExpireDate) {
+                        const now = Date.now();
+                        const expDate = new Date(prodInfo.ExpireDate);
+                        const diff = prodInfo.ExpireDate - now;
+                        if (diff <= 0) {
+                            console.log("now", now);
+                            console.log("prodInfo.ExpireDate", prodInfo.ExpireDate);
+                            yield Scanner.Say("Просрочено!");
+                        }
+                        else {
+                            // const dateStr = expDate.toLocaleDateString('ru-RU', { year: 'numeric', month: 'numeric', day: 'numeric' });
+                            const dateStr = `${expDate.getDate()} ${expDate.getMonth() + 1} ${expDate.getFullYear()}`;
+                            yield Scanner.Say("Годен до");
+                            yield Scanner.Say(dateStr);
+                        }
+                    }
+                    return;
+                }
+            }
+            catch (error) {
+                console.log(error);
+            }
+            const barcodeData = yield this.barcodeDb.GetBarcodeData(data);
+            if (!barcodeData || barcodeData.length === 0) {
+                // this.ScannerBadBell();
+                Scanner.Say("Ничего не найдено");
+                // PrintText(`Отсканировано:\n${data}`, page33);
+            }
+            else {
+                barcodeData.forEach(barData => {
+                    Scanner.Say(barData.Name);
+                    const textForPring = `${Scanner.WrapText(barData.Name, 33)}\n\n${Scanner.WrapText(barData.CategoryName, 33)}\n\n${Scanner.WrapText(barData.BrandName, 33)}`;
+                    console.log("barData.Name", barData.Name);
+                    // console.log(textForPring);
+                    // PrintText(textForPring, page33);
+                });
+            }
+        });
     }
     InitSerialPort() {
         const parser = new serialport_1.default.parsers.Readline({ delimiter: "\r", encoding: "utf8" });
@@ -77,63 +143,7 @@ module.exports = class Scanner {
         this.port.pipe(parser);
         parser.on('data', (data) => __awaiter(this, void 0, void 0, function* () {
             console.log("Scanned", data);
-            // =================================================================
-            // Если ШК начинается с домашенго префикса
-            if (data.startsWith(PrintByQr.HomeQrPrefix)) {
-                const code = data.substring(PrintByQr.HomeQrPrefix.length);
-                const qrFound = this.printByQrSettings.find(qs => qs.Code === code);
-                if (!qrFound) {
-                    // this.ScannerBadBell();
-                    this.Say("Ничего не найдено");
-                    return;
-                }
-                printerutils_1.PrintText(this.WrapText(qrFound.Text, 33), printerutils_1.page33);
-                return;
-            }
-            // =================================================================
-            // Пробуем через честный знак
-            try {
-                const prodInfo = yield chestznak_1.ChesZnak.GetData(data);
-                if (prodInfo) {
-                    console.log("prodInfo", prodInfo);
-                    yield this.Say(prodInfo.Name);
-                    if (prodInfo.ExpireDate) {
-                        const now = Date.now();
-                        const expDate = new Date(prodInfo.ExpireDate);
-                        const diff = prodInfo.ExpireDate - now;
-                        if (diff <= 0) {
-                            console.log("now", now);
-                            console.log("prodInfo.ExpireDate", prodInfo.ExpireDate);
-                            yield this.Say("Просрочено!");
-                        }
-                        else {
-                            // const dateStr = expDate.toLocaleDateString('ru-RU', { year: 'numeric', month: 'numeric', day: 'numeric' });
-                            const dateStr = `${expDate.getDate()} ${expDate.getMonth() + 1} ${expDate.getFullYear()}`;
-                            yield this.Say("Годен до");
-                            yield this.Say(dateStr);
-                        }
-                    }
-                    return;
-                }
-            }
-            catch (error) {
-                console.log(error);
-            }
-            const barcodeData = yield this.barcodeDb.GetBarcodeData(data);
-            if (!barcodeData || barcodeData.length === 0) {
-                // this.ScannerBadBell();
-                this.Say("Ничего не найдено");
-                // PrintText(`Отсканировано:\n${data}`, page33);
-            }
-            else {
-                barcodeData.forEach(barData => {
-                    this.Say(barData.Name); //"Найдено! " + 
-                    const textForPring = `${this.WrapText(barData.Name, 33)}\n\n${this.WrapText(barData.CategoryName, 33)}\n\n${this.WrapText(barData.BrandName, 33)}`;
-                    console.log("barData.Name", barData.Name);
-                    // console.log(textForPring);
-                    // PrintText(textForPring, page33);
-                });
-            }
+            this.OnSacnned(data);
         }));
     }
     OpenPort() {
@@ -152,7 +162,7 @@ module.exports = class Scanner {
             }
         });
     }
-    Say(str) {
+    static Say(str) {
         return __awaiter(this, void 0, void 0, function* () {
             str = str.replace("%", "процентов");
             return yield new Promise((resolve, reject) => {
@@ -171,8 +181,22 @@ module.exports = class Scanner {
             });
         });
     }
+    InitMysql() {
+        try {
+            console.log('Get mysql connection ...');
+            const conn = mysql_1.default.createConnection({
+                database: 'prod',
+                host: "localhost"
+            });
+        }
+        catch (error) {
+            console.error(error);
+        }
+    }
     Init() {
         return __awaiter(this, void 0, void 0, function* () {
+            Scanner.Instance = this;
+            this.InitMysql();
             this.barcodeDb = new barcodedb_1.BarcodeDb();
             yield this.barcodeDb.OpenDb();
             // Стартовые тесты
@@ -222,5 +246,10 @@ module.exports = class Scanner {
     ReloadPrintByQrSettings() {
         this.printByQrSettings = PrintByQr.LoadQrSettings();
     }
-};
+}
+exports.Scanner = Scanner;
+// const ScannerInstance: Scanner = new Scanner();
+// ScannerInstance.Init();
+// export { ScannerInstance };
+// module.exports = ScannerInstance;
 //# sourceMappingURL=scanner.js.map
