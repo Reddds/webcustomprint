@@ -5,11 +5,12 @@
     "scripts": {
         "compile": "tsc",
         "compile.and.start": "tsc && DEBUG=myapp:* node ./bin/www",
-        "start": "DEBUG=myapp:* node ./bin/www",
+        "start": "SILENCE=1 DEBUG=myapp:* node ./bin/www",
         "start:win": "tsc & set DEBUG=express:* & node ./bin/www"
     },
     "dependencies": {
         "@types/bootstrap": "^5.1.6",
+        "@types/mysql": "^2.15.20",
         "@types/sqlite3": "^3.1.7",
         "bootstrap": "^5.1.3",
         "cookie-parser": "^1.4.6",
@@ -19,6 +20,7 @@
         "http-errors": "~1.6.3",
         "jquery": "^3.6.0",
         "morgan": "^1.10.0",
+        "mysql": "^2.18.1",
         "node-cp866buffer": "^0.0.6",
         "pug": "^3.0.2",
         "sqlite": "^4.0.23",

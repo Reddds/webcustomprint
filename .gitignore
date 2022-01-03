@@ -95,3 +95,10 @@ dist/scanner.js.map
 dist/printerutils.js
 dist/printerutils.js.map
 dist/printSrc/printbyqr.json
+dist/app.js
+dist/app.js.map
+dist/prodUtils.js
+dist/prodUtils.js.map
+dist/scan.js
+dist/scanner.js
+dist/scanner.js.map
