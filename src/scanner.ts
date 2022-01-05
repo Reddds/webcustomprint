@@ -83,6 +83,7 @@ export class Scanner {
             const expDate = prodInfo.ExpireDate ? new Date(prodInfo.ExpireDate) : null;
             const isTrashed = false;
             const code = prodInfo.Dump.code;
+            let producer = prodInfo.Dump.producerName;
             let cis = prodInfo.Dump.cis;
             let gtin = prodInfo.Dump.gtin;
             let sgtin = prodInfo.Dump.sgtin;
@@ -103,6 +104,19 @@ export class Scanner {
                 }
             }
 
+            if (prodInfo.Dump.drugsData) {
+                const drugsDataCode = prodInfo.Dump.drugsData;
+                // if (!cis) {
+                //     cis = drugsDataCode.cis;
+                // }
+                if (!gtin) {
+                    gtin = drugsDataCode.gtin;
+                }
+                if (!sgtin) {
+                    sgtin = drugsDataCode.sgtin;
+                }
+            }
+
             const newCats = [];
 
             const catalogDataArr: any[] = prodInfo.Dump.catalogData;
@@ -111,7 +125,8 @@ export class Scanner {
                 const catalogData = catalogDataArr[0];
 
                 const imageUrl = catalogData.good_img;
-                const producer = catalogData.producer_name;
+                if (!producer)
+                    producer = catalogData.producer_name;
                 const catalogGoodId = catalogData.good_id;
                 const catalogBrandId = catalogData.brand_id;
 
@@ -127,7 +142,6 @@ export class Scanner {
 
                 catalogDataObj = {
                     image_url: imageUrl,
-                    producer,
                     catalog_good_id: catalogGoodId,
                     catalog_brand_id: catalogBrandId
                 }
@@ -151,6 +165,7 @@ export class Scanner {
                 cz_id: czId,
                 product_name: productName,
                 category,
+                producer,
                 exp_date: expDate,
                 is_trashed: isTrashed,
                 code,

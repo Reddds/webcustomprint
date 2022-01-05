@@ -66,6 +66,7 @@ class Scanner {
                 const expDate = prodInfo.ExpireDate ? new Date(prodInfo.ExpireDate) : null;
                 const isTrashed = false;
                 const code = prodInfo.Dump.code;
+                let producer = prodInfo.Dump.producerName;
                 let cis = prodInfo.Dump.cis;
                 let gtin = prodInfo.Dump.gtin;
                 let sgtin = prodInfo.Dump.sgtin;
@@ -83,13 +84,26 @@ class Scanner {
                         sgtin = milkDataCode.sgtin;
                     }
                 }
+                if (prodInfo.Dump.drugsData) {
+                    const drugsDataCode = prodInfo.Dump.drugsData;
+                    // if (!cis) {
+                    //     cis = drugsDataCode.cis;
+                    // }
+                    if (!gtin) {
+                        gtin = drugsDataCode.gtin;
+                    }
+                    if (!sgtin) {
+                        sgtin = drugsDataCode.sgtin;
+                    }
+                }
                 const newCats = [];
                 const catalogDataArr = prodInfo.Dump.catalogData;
                 let catalogDataObj;
                 if (catalogDataArr && catalogDataArr.length > 0) {
                     const catalogData = catalogDataArr[0];
                     const imageUrl = catalogData.good_img;
-                    const producer = catalogData.producer_name;
+                    if (!producer)
+                        producer = catalogData.producer_name;
                     const catalogGoodId = catalogData.good_id;
                     const catalogBrandId = catalogData.brand_id;
                     if (!gtin && catalogData.identified_by) {
@@ -101,7 +115,6 @@ class Scanner {
                     }
                     catalogDataObj = {
                         image_url: imageUrl,
-                        producer,
                         catalog_good_id: catalogGoodId,
                         catalog_brand_id: catalogBrandId
                     };
@@ -113,7 +126,8 @@ class Scanner {
                         // }
                     });
                 }
-                const post = Object.assign({ cz_id: czId, product_name: productName, category, exp_date: expDate, is_trashed: isTrashed, code,
+                const post = Object.assign({ cz_id: czId, product_name: productName, category,
+                    producer, exp_date: expDate, is_trashed: isTrashed, code,
                     gtin,
                     sgtin,
                     cis, is_individual: isIndividual }, catalogDataObj);
