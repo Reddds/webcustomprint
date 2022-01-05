@@ -10,3 +10,30 @@ block content
         label.form-label(for="scannedCodeFormat") Формат кода
         input.form-control#scannedCodeFormat(name="scannedCodeFormat")
     input.btn.btn-primary(type='submit', value='Загрузить')
+
+
+  h1 Товары в наличии
+  if existProds
+    table.table.table-striped
+      thead
+        tr
+          th(scope="col") Изображение
+          th(scope="col") Название
+          th(scope="col") Срок годности
+          th.w-25(scope="col") Осталось
+      tbody
+        each prod in existProds
+          tr
+            td.exist-prod-image-cell
+              if prod.img
+                img.exist-prod-image(src=prod.img, alt="Изображение товара")
+            td= prod.name
+            td= prod.expDate
+            td 
+              .progress
+                - var styleWidth = "width: " + prod.expPercent + '%';
+                - var daysLeft = prod.daysLeft ? prod.daysLeft + " дн" : undefined
+                .progress-bar(role="progressbar", style=styleWidth, aria-valuenow=prod.expPercent, aria-valuemin="0", aria-valuemax="100")= daysLeft
+  else
+    h3 Нет внесённых товаров
+

@@ -13,9 +13,11 @@ const scannerInstance = Singleton.getInstance();
 
 // export const HomeQrPrefix = "[HOMEPR]";
 
-router.get('/', (req, res, next) => {
+router.get('/', async (req, res, next) => {
 
-    res.render('scan', {});
+    const existProds = await scannerInstance.GetExistProds();
+    // console.log("existProds", existProds);
+    res.render('scan', {existProds});
 });
 
 

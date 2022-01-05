@@ -65,13 +65,13 @@ class ChesZnak {
                         });
                         // The whole response has been received. Print out the result.
                         resp.on('end', () => {
-                            console.log(data);
+                            // console.log(data);
                             const prodInfo = JSON.parse(data);
                             if (!prodInfo || !prodInfo.codeFounded) {
                                 reject();
                                 return;
                             }
-                            resolve({ Name: prodInfo.productName });
+                            resolve({ Name: prodInfo.productName, Dump: prodInfo });
                         });
                     }).on("error", (err) => {
                         console.log("Error: " + err.message);
@@ -93,7 +93,7 @@ class ChesZnak {
                     });
                     // The whole response has been received. Print out the result.
                     resp.on('end', () => {
-                        console.log(data);
+                        // console.log(data);
                         const prodInfo = JSON.parse(data);
                         if (!prodInfo || !prodInfo.codeFounded) {
                             reject();
@@ -107,8 +107,8 @@ class ChesZnak {
                         else if (prodInfo.drugsData) {
                             expDate = Date.parse(prodInfo.drugsData.expirationDate);
                         }
-                        const res = { Name: prodInfo.productName, ExpireDate: expDate };
-                        console.log(res);
+                        const res = { Name: prodInfo.productName, ExpireDate: expDate, Dump: prodInfo };
+                        // console.log(res);
                         resolve(res);
                     });
                 }).on("error", (err) => {

@@ -8,6 +8,7 @@ Type=simple
 User=##CUR_USER_NAME##
 # ExecStart=node ##FULL_PATH_TO_DIR##/bin/www
 ExecStart=/usr/bin/node ##FULL_PATH_TO_DIR##/bin/www
+# ExecStart=/usr/bin/node -r dotenv/config ##FULL_PATH_TO_DIR##/bin/www dotenv_config_path=##FULL_PATH_TO_DIR##
 # ExecStart=/usr/bin/nodejs ##FULL_PATH_TO_DIR##/bin/www
 Restart=on-failure
 

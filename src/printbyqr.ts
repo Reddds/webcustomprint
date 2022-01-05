@@ -1,6 +1,5 @@
 import express from 'express';
 import fs, { fdatasync, PathLike } from "fs";
-import * as Scanner from "./scanner";
 
 const router = express.Router();
 const settingsFile = `${__dirname}/printSrc/printbyqr.json`;

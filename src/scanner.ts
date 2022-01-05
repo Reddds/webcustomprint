@@ -1,12 +1,18 @@
 import usbDetect from 'usb-detection';
 import SerialPort from "serialport";
-import mysql from "mysql";
+import mysql from "mysql2/promise";
+import fs from "fs";
+import util from "util";
+
+// import dotenv from "dotenv";
 
 import { printedModel, PrintRaw, PrintText, page33 } from "./printerutils";
 import { BarcodeDb } from "./barcodedb";
 import { exec } from "child_process";
 import * as PrintByQr from "./printbyqr";
-import { ChesZnak } from "./chestznak";
+import { ChesZnak, ProdInfo } from "./chestznak";
+
+// console.log("scanner pid", process.pid);
 
 // SerialPort.parsers = {
 //     ByteLength: require('@serialport/parser-byte-length'),
@@ -21,12 +27,35 @@ import { ChesZnak } from "./chestznak";
 //     return Scanner.Instance;
 // }
 
+interface IExistProd {
+    name: string;
+    img: string;
+    expDate: string | undefined;
+    daysLeft: number | undefined;
+    expPercent: number;
+}
+
+interface ICatCategory extends mysql.RowDataPacket {
+    cat_id: number;
+    name: string;
+}
+
+
+interface IProd extends mysql.RowDataPacket {
+    product_name: string;
+    code: string;
+    image_url: string;
+    exp_date: Date;
+}
+
 export class Scanner {
     public static Instance: Scanner;
     private port: SerialPort;
     private barcodeDb: BarcodeDb;
 
     private printByQrSettings: PrintByQr.PrintByQrItem[];
+
+    private dbCon: mysql.Connection;
 
     // /**
     //  *
@@ -45,7 +74,148 @@ export class Scanner {
         return res;
     }
 
+    private async AddToBase(scanned: string, prodInfo: ProdInfo) {
+        if (this.dbCon) {
+
+            const czId = prodInfo.Dump.id;
+            const productName = prodInfo.Dump.productName;
+            const category = prodInfo.Dump.category;
+            const expDate = prodInfo.ExpireDate ? new Date(prodInfo.ExpireDate) : null;
+            const isTrashed = false;
+            const code = prodInfo.Dump.code;
+            let cis = prodInfo.Dump.cis;
+            let gtin = prodInfo.Dump.gtin;
+            let sgtin = prodInfo.Dump.sgtin;
+
+            /** Индивидуальный код с серийным номером */
+            const isIndividual = !!prodInfo.ExpireDate;
+
+            if (prodInfo.Dump.milkData && prodInfo.Dump.milkData.codeData) {
+                const milkDataCode = prodInfo.Dump.milkData.codeData;
+                if (!cis) {
+                    cis = milkDataCode.cis;
+                }
+                if (!gtin) {
+                    gtin = milkDataCode.gtin;
+                }
+                if (!sgtin) {
+                    sgtin = milkDataCode.sgtin;
+                }
+            }
+
+            const newCats = [];
+
+            const catalogDataArr: any[] = prodInfo.Dump.catalogData;
+            let catalogDataObj: any;
+            if (catalogDataArr && catalogDataArr.length > 0) {
+                const catalogData = catalogDataArr[0];
+
+                const imageUrl = catalogData.good_img;
+                const producer = catalogData.producer_name;
+                const catalogGoodId = catalogData.good_id;
+                const catalogBrandId = catalogData.brand_id;
+
+                if (!gtin && catalogData.identified_by) {
+                    const idents: any[] = catalogData.identified_by;
+                    const ident = idents.find(ide => ide.level === "trade-unit");
+                    if (ident) {
+                        gtin = ident.value;
+                    }
+
+                }
+
+
+                catalogDataObj = {
+                    image_url: imageUrl,
+                    producer,
+                    catalog_good_id: catalogGoodId,
+                    catalog_brand_id: catalogBrandId
+                }
+
+                catalogData.categories.forEach(categoryItem => {
+                    newCats.push({
+                        cat_id: categoryItem.cat_id,
+                        name: categoryItem.cat_name
+                    });
+
+
+                    // }
+
+                });
+
+
+            }
+
+
+            const post = {
+                cz_id: czId,
+                product_name: productName,
+                category,
+                exp_date: expDate,
+                is_trashed: isTrashed,
+                code,
+                gtin,
+                sgtin,
+                cis,
+                is_individual: isIndividual,
+
+                ...catalogDataObj
+            }
+
+
+
+            console.log("begin transaction...");
+            await this.dbCon.beginTransaction();
+
+            let isExists = isIndividual;
+            if (isIndividual) {
+                console.log("individual");
+                const [rowsExist, fieldsExist] = await this.dbCon.execute<IProd[]>(`SELECT * FROM prods WHERE code='${post.code}'`);
+                isExists = rowsExist && rowsExist.length !== 0;
+            }
+
+            if (!isExists) {
+                console.log("adding new prod", post.code);
+                await this.dbCon.query('INSERT INTO prods SET ?', post);
+                const [rows1, fields1] = await this.dbCon.query('SELECT LAST_INSERT_ID() as lastId');
+                const prodId = rows1[0].lastId;
+                // console.log("rows1", rows1);
+                // console.log("last id", rows1[0].lastId);
+                // console.log("fields1", fields1);
+
+                newCats.forEach(async catNew => {
+                    const [rows, fields] = await this.dbCon.execute<ICatCategory[]>(`SELECT * FROM catalog_categories WHERE cat_id=${catNew.cat_id}`);
+                    // console.log("check exist cat", catNew);
+                    // console.log("rows", rows);
+                    // console.log("fields", fields);
+                    if (!rows || rows.length === 0) {
+                        console.log("inserting new cat");
+                        await this.dbCon.query('INSERT INTO catalog_categories SET ?', catNew);
+                    }
+
+                    const prodToCat = {
+                        prod: prodId,
+                        category: catNew.cat_id
+                    }
+
+                    await this.dbCon.query('INSERT INTO prods_by_caterories SET ?', prodToCat);
+                });
+            } else {
+                Scanner.Say("Этот товар уже отсканирован");
+                console.log("prod already exists");
+            }
+            console.log("committing transaction...");
+            await this.dbCon.commit();
+
+        }
+    }
+
+
+
     public async OnSacnned(data: string, format?: string): Promise<void> {
+
+
+
         // =================================================================
         // Если ШК начинается с домашенго префикса
         if (data.startsWith(PrintByQr.HomeQrPrefix)) {
@@ -65,7 +235,24 @@ export class Scanner {
         try {
             const prodInfo = await ChesZnak.GetData(data);
             if (prodInfo) {
-                console.log("prodInfo", prodInfo);
+                // console.log("prodInfo", prodInfo);
+
+                // Записываем дамп
+                const filePath = `${__dirname}/prints/scan_${Date.now()}.json`;
+                try {
+                    fs.writeFileSync(filePath, `Scanned: "${data}"\n\n${JSON.stringify(prodInfo.Dump)}`);
+                } catch (error) {
+                    console.error("Error write scan", error);
+                }
+
+
+                try {
+                    this.AddToBase(data, prodInfo);
+                } catch (error) {
+                    console.error("Error save in Base", error);
+                }
+
+
                 await Scanner.Say(prodInfo.Name);
 
                 if (prodInfo.ExpireDate) {
@@ -110,6 +297,54 @@ export class Scanner {
         }
     }
 
+    private datediff(first: number, second: number) {
+        // Take the difference between the dates and divide by milliseconds per day.
+        // Round to nearest whole number to deal with DST.
+        return Math.round((second - first) / (1000 * 60 * 60 * 24));
+    }
+
+    public async GetExistProds(): Promise<IExistProd[]> {
+        try {
+            const [rowsExist, fieldsExist] = await this.dbCon.execute<IProd[]>(`SELECT * FROM prods WHERE is_trashed=0 ORDER BY exp_date`);
+            return rowsExist.map(prod => {
+
+                // Проценты просрочки относительно недели
+                let expPercent = 0;
+                let daysLeft: number;
+                if (!prod.exp_date) {
+                    expPercent = 100;
+                } else {
+                    const fullDays = 30;
+                    const dayDiff = this.datediff(Date.now(), prod.exp_date.getTime());
+                    daysLeft = dayDiff;
+                    // console.log("dayDiff", dayDiff);
+                    // console.log("Date.now()", Date.now());
+                    // console.log("prod.exp_date.getTime()", prod.exp_date.getTime());
+                    if (dayDiff <= 0) {
+                        expPercent = 0;
+                    } else if (dayDiff >= fullDays) {
+                        expPercent = 100;
+                    } else {
+                        expPercent = dayDiff / fullDays * 100;
+                    }
+                }
+
+
+
+                return {
+                    name: prod.product_name,
+                    img: prod.image_url,
+                    expDate: prod.exp_date ? prod.exp_date.toLocaleDateString() : undefined,
+                    daysLeft,
+                    expPercent
+                }
+            });
+        } catch (error) {
+            console.error(error);
+            return undefined;
+        }
+    }
+
     private InitSerialPort(): void {
         const parser = new SerialPort.parsers.Readline({ delimiter: "\r", encoding: "utf8" });
         this.port = new SerialPort('/dev/ttyACM0', {
@@ -148,11 +383,12 @@ export class Scanner {
             if (err) {
                 return console.log('Error closing port: ', err.message);
             }
+            console.log("Port closed", this.port.path);
         });
     }
 
     private static async Say(str: string) {
-        if(process.env.SILENCE === "1") {
+        if (process.env.SILENCE === "1") {
             return;
         }
         str = str.replace("%", "процентов");
@@ -174,22 +410,32 @@ export class Scanner {
     }
 
 
-    private InitMysql() {
+    private async InitMysql() {
         try {
             console.log('Get mysql connection ...');
-        const conn = mysql.createConnection({
-            database: 'prod',
-            host: "localhost"
-            
-          });
+            this.dbCon = await mysql.createConnection({
+                database: 'prods',
+                host: "localhost",
+                // socketPath: '/run/mysqld/mysqld.sock',
+                user: process.env.DB_LOGIN,
+                password: process.env.DB_PASSWORD
+            });
+            // this.dbCon.connect((err) => {
+            //     if (err)
+            //         throw err;
+            //     console.log("Connected!");
+            // });
         } catch (error) {
             console.error(error);
         }
-        
+
+
     }
 
     public async Init() {
         Scanner.Instance = this;
+
+        // dotenv.config({ path: '../.env' });
 
         this.InitMysql();
 
@@ -259,6 +505,10 @@ export class Scanner {
         this.printByQrSettings = PrintByQr.LoadQrSettings();
     }
 
+    public Exit() {
+        this.ClosePort();
+        this.dbCon.destroy();
+    }
 }
 
 

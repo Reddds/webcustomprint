@@ -3,14 +3,49 @@
 /**
  * Module dependencies.
  */
+console.log("www pid", process.pid);
+
+const path = require("path");
+const dotenv = require("dotenv");
+// Если запуск как сервиса, то текущая папка процесса - корень системы
+if (process.cwd() === "/") {
+    const pathToenv = path.resolve(__dirname, '../.env');
+    console.log("env path", pathToenv);
+    console.log("process.cwd()", process.cwd());
+    dotenv.config({ path: pathToenv });
+    console.log("DB_LOGIN", process.env.DB_LOGIN);
+} else {
+    console.log("load default env");
+    console.log("process.cwd()", process.cwd());
+    const pathToenv = path.resolve(__dirname, '../.env');
+    console.log("env path", pathToenv);
+    dotenv.config();
+
+    console.log("DB_LOGIN", process.env.DB_LOGIN);
+}
+
 const os = require("os");
 const app = require('../dist/app');
 const debug = require('debug')('webcustomprint:server');
 const http = require('http');
 
+/*
+const stdin = process.openStdin();
+
+stdin.addListener("data", (d) => {
+    // note:  d is an object, and when converted to a string it will
+    // end with a linefeed.  so we (rather crudely) account for that
+    // with toString() and then trim()
+    console.log("you entered: [" +
+        d.toString().trim() + "]");
+});*/
+
+
+
 // const usbDetect = require('usb-detection');
 
-const scanerSingleton = require('../dist/prodUtils');
+const scanerSingleton = require('../dist/prodUtils').Singleton.getInstance();
+console.log("scanerSingleton", scanerSingleton);
 // import { Singleton } from "../dist/prodUtils";
 
 console.log("starting... with username", os.userInfo().username);
@@ -98,28 +133,24 @@ function onListening() {
     debug('Listening on ' + bind);
 }
 
-/*
-//  Detect scanner 05f9:4204
-usbDetect.startMonitoring();
 
-usbDetect.on('add:1529:16900', function(device) {
-    console.log('adding');
-    console.log('add', device);
-    usbDetect.find(0x05f9, 0x4204, function(err, devices) {
-        console.log('find', devices, err);
-    });
-});
+const gracefulShutdownHandler = (signal) => {
+    console.log(`⚠️ Caught ${signal}, gracefully shutting down`);
+    HEALTH_CHECK_ENABLED = false;
 
-usbDetect.on('remove:1529:16900', function(device) {
-    console.log('removing');
-    console.log('remove', device);
-});
+    setTimeout(() => {
+        console.log('🤞 Shutting down application');
+        // stop the server from accepting new connections
+        server.close(() => {
+            console.log('👋 All requests stopped, shutting down');
+            // once the server is not accepting connections, exit
+            process.exit();
+        });
+    }, 0);
+};
 
-usbDetect.find(0x05f9, 0x4204, function(err, devices) {
-    console.log('find', devices, err);
-});
-*/
-// const scannerWorker = new scanner();
-// scannerWorker.Init();
+// The SIGINT signal is sent to a process by its controlling terminal when a user wishes to interrupt the process.
+process.on('SIGINT', gracefulShutdownHandler);
 
-//scanerSingleton.getInstance();
+// The SIGTERM signal is sent to a process to request its termination.
+process.on('SIGTERM', gracefulShutdownHandler);

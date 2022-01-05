@@ -66,3 +66,11 @@ img.prod-img {
     width: 50px;
     margin-right: 10px;
 }
+
+img.exist-prod-image {
+    height: 100px;
+}
+
+.exist-prod-image-cell {
+    text-align: center;
+}
