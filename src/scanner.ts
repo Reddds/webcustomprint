@@ -42,10 +42,12 @@ interface ICatCategory extends mysql.RowDataPacket {
 
 
 interface IProd extends mysql.RowDataPacket {
+    id: number;
     product_name: string;
     code: string;
     image_url: string;
     exp_date: Date;
+    ChesZnakDump: string;
 }
 
 export class Scanner {
@@ -55,7 +57,8 @@ export class Scanner {
 
     private printByQrSettings: PrintByQr.PrintByQrItem[];
 
-    private dbCon: mysql.Connection;
+    // private dbCon: mysql.Connection;
+    private dbPool: mysql.Pool;
 
     // /**
     //  *
@@ -75,7 +78,7 @@ export class Scanner {
     }
 
     private async AddToBase(scanned: string, prodInfo: ProdInfo) {
-        if (this.dbCon) {
+        if (this.dbPool) {
 
             const czId = prodInfo.Dump.id;
             const productName = prodInfo.Dump.productName;
@@ -173,6 +176,7 @@ export class Scanner {
                 sgtin,
                 cis,
                 is_individual: isIndividual,
+                ChesZnakDump: JSON.stringify(prodInfo.Dump),
 
                 ...catalogDataObj
             }
@@ -180,32 +184,41 @@ export class Scanner {
 
 
             console.log("begin transaction...");
-            await this.dbCon.beginTransaction();
+            const dbCon = await this.dbPool.getConnection();
+            await dbCon.beginTransaction();
 
             let isExists = isIndividual;
+            let existRow:IProd;
+
             if (isIndividual) {
                 console.log("individual");
-                const [rowsExist, fieldsExist] = await this.dbCon.execute<IProd[]>(`SELECT * FROM prods WHERE code='${post.code}'`);
-                isExists = rowsExist && rowsExist.length !== 0;
+                const [rowsExist, fieldsExist] = await dbCon.execute<IProd[]>(`SELECT * FROM prods WHERE code='${post.code}'`);
+                if(rowsExist && rowsExist.length !== 0) {
+                    // console.log("exists rows", rowsExist);
+                    isExists = true;
+                    existRow = rowsExist[0];
+                } else {
+                    isExists = false;
+                }
             }
 
             if (!isExists) {
                 console.log("adding new prod", post.code);
-                await this.dbCon.query('INSERT INTO prods SET ?', post);
-                const [rows1, fields1] = await this.dbCon.query('SELECT LAST_INSERT_ID() as lastId');
+                await dbCon.query('INSERT INTO prods SET ?', post);
+                const [rows1, fields1] = await dbCon.query('SELECT LAST_INSERT_ID() as lastId');
                 const prodId = rows1[0].lastId;
                 // console.log("rows1", rows1);
                 // console.log("last id", rows1[0].lastId);
                 // console.log("fields1", fields1);
 
                 newCats.forEach(async catNew => {
-                    const [rows, fields] = await this.dbCon.execute<ICatCategory[]>(`SELECT * FROM catalog_categories WHERE cat_id=${catNew.cat_id}`);
+                    const [rows, fields] = await dbCon.execute<ICatCategory[]>(`SELECT * FROM catalog_categories WHERE cat_id=${catNew.cat_id}`);
                     // console.log("check exist cat", catNew);
                     // console.log("rows", rows);
                     // console.log("fields", fields);
                     if (!rows || rows.length === 0) {
                         console.log("inserting new cat");
-                        await this.dbCon.query('INSERT INTO catalog_categories SET ?', catNew);
+                        await dbCon.query('INSERT INTO catalog_categories SET ?', catNew);
                     }
 
                     const prodToCat = {
@@ -213,15 +226,23 @@ export class Scanner {
                         category: catNew.cat_id
                     }
 
-                    await this.dbCon.query('INSERT INTO prods_by_caterories SET ?', prodToCat);
+                    await dbCon.query('INSERT INTO prods_by_caterories SET ?', prodToCat);
                 });
             } else {
+                console.log(`prod already exists. code='${post.code}'`);
+                if(existRow && !existRow.ChesZnakDump) {
+                    console.log(`Update ChesZnakDump id=${existRow.id}`);
+                    // await dbCon.execute(`UPDATE prods SET ChesZnakDump = '${JSON.stringify(prodInfo.Dump)}' WHERE id = ${existRow.id}`,
+                    await dbCon.query(`UPDATE prods SET ? WHERE ?`,
+                     [{ChesZnakDump: JSON.stringify(prodInfo.Dump)}, {id: existRow.id}]);
+                }
                 Scanner.Say("Этот товар уже отсканирован");
-                console.log("prod already exists");
+
             }
             console.log("committing transaction...");
-            await this.dbCon.commit();
-
+            await dbCon.commit();
+            if (dbCon)
+                dbCon.release();
         }
     }
 
@@ -251,9 +272,10 @@ export class Scanner {
             const prodInfo = await ChesZnak.GetData(data);
             if (prodInfo) {
                 // console.log("prodInfo", prodInfo);
+                console.log("ChesZnak success");
 
                 // Записываем дамп
-                const filePath = `${__dirname}/prints/scan_${Date.now()}.json`;
+                const filePath = `${__dirname}/scans/scan_${Date.now()}.json`;
                 try {
                     fs.writeFileSync(filePath, `Scanned: "${data}"\n\n${JSON.stringify(prodInfo.Dump)}`);
                 } catch (error) {
@@ -320,7 +342,7 @@ export class Scanner {
 
     public async GetExistProds(): Promise<IExistProd[]> {
         try {
-            const [rowsExist, fieldsExist] = await this.dbCon.execute<IProd[]>(`SELECT * FROM prods WHERE is_trashed=0 ORDER BY exp_date`);
+            const [rowsExist, fieldsExist] = await this.dbPool.execute<IProd[]>(`SELECT * FROM prods WHERE is_trashed=0 ORDER BY exp_date`);
             return rowsExist.map(prod => {
 
                 // Проценты просрочки относительно недели
@@ -428,13 +450,22 @@ export class Scanner {
     private async InitMysql() {
         try {
             console.log('Get mysql connection ...');
-            this.dbCon = await mysql.createConnection({
+            // this.dbCon = await mysql.createConnection({
+            //     database: 'prods',
+            //     host: "localhost",
+            //     // socketPath: '/run/mysqld/mysqld.sock',
+            //     user: process.env.DB_LOGIN,
+            //     password: process.env.DB_PASSWORD
+            // });
+
+            this.dbPool = await mysql.createPool({
+                connectionLimit: 20,
                 database: 'prods',
                 host: "localhost",
-                // socketPath: '/run/mysqld/mysqld.sock',
                 user: process.env.DB_LOGIN,
                 password: process.env.DB_PASSWORD
             });
+
             // this.dbCon.connect((err) => {
             //     if (err)
             //         throw err;
@@ -522,7 +553,8 @@ export class Scanner {
 
     public Exit() {
         this.ClosePort();
-        this.dbCon.destroy();
+        // this.dbCon.destroy();
+        // this.dbPool.destroy();
     }
 }
 
