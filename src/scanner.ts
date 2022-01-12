@@ -2,6 +2,7 @@ import usbDetect from 'usb-detection';
 import SerialPort from "serialport";
 import mysql from "mysql2/promise";
 import fs from "fs";
+import AsyncLock from "async-lock";
 import util from "util";
 
 // import dotenv from "dotenv";
@@ -50,6 +51,12 @@ interface IProd extends mysql.RowDataPacket {
     ChesZnakDump: string;
 }
 
+interface ICodeData {
+    cis: string;
+    gtin: string;
+    sgtin: string
+}
+
 export class Scanner {
     public static Instance: Scanner;
     private port: SerialPort;
@@ -91,34 +98,37 @@ export class Scanner {
             let gtin = prodInfo.Dump.gtin;
             let sgtin = prodInfo.Dump.sgtin;
 
-            /** Индивидуальный код с серийным номером */
-            const isIndividual = !!prodInfo.ExpireDate;
 
+            let codeData: ICodeData;
             if (prodInfo.Dump.milkData && prodInfo.Dump.milkData.codeData) {
-                const milkDataCode = prodInfo.Dump.milkData.codeData;
-                if (!cis) {
-                    cis = milkDataCode.cis;
-                }
-                if (!gtin) {
-                    gtin = milkDataCode.gtin;
-                }
-                if (!sgtin) {
-                    sgtin = milkDataCode.sgtin;
-                }
+                codeData = prodInfo.Dump.milkData.codeData;
             }
 
             if (prodInfo.Dump.drugsData) {
-                const drugsDataCode = prodInfo.Dump.drugsData;
-                // if (!cis) {
-                //     cis = drugsDataCode.cis;
-                // }
+                codeData = prodInfo.Dump.drugsData;
+            }
+
+            if (prodInfo.Dump.lpData) {
+                codeData = prodInfo.Dump.lpData.codeData;
+            }
+
+            if (codeData) {
+                if (!cis) {
+                    cis = codeData.cis;
+                }
                 if (!gtin) {
-                    gtin = drugsDataCode.gtin;
+                    gtin = codeData.gtin;
                 }
                 if (!sgtin) {
-                    sgtin = drugsDataCode.sgtin;
+                    sgtin = codeData.sgtin;
                 }
             }
+
+            /** Индивидуальный код с серийным номером */
+            const isIndividual: boolean = !!prodInfo.ExpireDate || !!sgtin;
+
+
+
 
             const newCats = [];
 
@@ -188,12 +198,12 @@ export class Scanner {
             await dbCon.beginTransaction();
 
             let isExists = isIndividual;
-            let existRow:IProd;
+            let existRow: IProd;
 
             if (isIndividual) {
                 console.log("individual");
                 const [rowsExist, fieldsExist] = await dbCon.execute<IProd[]>(`SELECT * FROM prods WHERE code='${post.code}'`);
-                if(rowsExist && rowsExist.length !== 0) {
+                if (rowsExist && rowsExist.length !== 0) {
                     // console.log("exists rows", rowsExist);
                     isExists = true;
                     existRow = rowsExist[0];
@@ -230,11 +240,11 @@ export class Scanner {
                 });
             } else {
                 console.log(`prod already exists. code='${post.code}'`);
-                if(existRow && !existRow.ChesZnakDump) {
+                if (existRow && !existRow.ChesZnakDump) {
                     console.log(`Update ChesZnakDump id=${existRow.id}`);
                     // await dbCon.execute(`UPDATE prods SET ChesZnakDump = '${JSON.stringify(prodInfo.Dump)}' WHERE id = ${existRow.id}`,
                     await dbCon.query(`UPDATE prods SET ? WHERE ?`,
-                     [{ChesZnakDump: JSON.stringify(prodInfo.Dump)}, {id: existRow.id}]);
+                        [{ ChesZnakDump: JSON.stringify(prodInfo.Dump) }, { id: existRow.id }]);
                 }
                 Scanner.Say("Этот товар уже отсканирован");
 
@@ -429,20 +439,32 @@ export class Scanner {
             return;
         }
         str = str.replace("%", "процентов");
+        const replaceQuotes = new RegExp('\"', "g");
+        str = str.replace(replaceQuotes, " ");
         return await new Promise<void>((resolve, reject) => {
-            exec(`spd-say --wait -o rhvoice -l ru  -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
-                if (error) {
-                    console.log(`error: ${error.message}`);
-                    return;
-                }
-                if (stderr) {
-                    console.log(`stderr: ${stderr}`);
-                    return;
-                }
-                console.log(`stdout: ${stdout}`);
 
-                resolve();
-            });
+            this.lock.acquire("say", (done) => {
+                console.log("say enter", str);
+                exec(`spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
+                    if (error) {
+                        console.log(`error: ${error.message}`);
+                        return;
+                    }
+                    if (stderr) {
+                        console.log(`stderr: ${stderr}`);
+                        return;
+                    }
+                    console.log(`stdout: ${stdout}`);
+
+                    done();
+                    resolve();
+                });
+            }, (err, ret) => {
+                console.log("say release");
+            }, {});
+
+
+
         });
     }
 
@@ -478,8 +500,12 @@ export class Scanner {
 
     }
 
+    private static lock: AsyncLock;
+
     public async Init() {
         Scanner.Instance = this;
+
+        Scanner.lock = new AsyncLock();
 
         // dotenv.config({ path: '../.env' });
 

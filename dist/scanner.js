@@ -36,6 +36,7 @@ const usb_detection_1 = __importDefault(require("usb-detection"));
 const serialport_1 = __importDefault(require("serialport"));
 const promise_1 = __importDefault(require("mysql2/promise"));
 const fs_1 = __importDefault(require("fs"));
+const async_lock_1 = __importDefault(require("async-lock"));
 // import dotenv from "dotenv";
 const printerutils_1 = require("./printerutils");
 const barcodedb_1 = require("./barcodedb");
@@ -70,32 +71,29 @@ class Scanner {
                 let cis = prodInfo.Dump.cis;
                 let gtin = prodInfo.Dump.gtin;
                 let sgtin = prodInfo.Dump.sgtin;
-                /** Индивидуальный код с серийным номером */
-                const isIndividual = !!prodInfo.ExpireDate;
+                let codeData;
                 if (prodInfo.Dump.milkData && prodInfo.Dump.milkData.codeData) {
-                    const milkDataCode = prodInfo.Dump.milkData.codeData;
-                    if (!cis) {
-                        cis = milkDataCode.cis;
-                    }
-                    if (!gtin) {
-                        gtin = milkDataCode.gtin;
-                    }
-                    if (!sgtin) {
-                        sgtin = milkDataCode.sgtin;
-                    }
+                    codeData = prodInfo.Dump.milkData.codeData;
                 }
                 if (prodInfo.Dump.drugsData) {
-                    const drugsDataCode = prodInfo.Dump.drugsData;
-                    // if (!cis) {
-                    //     cis = drugsDataCode.cis;
-                    // }
+                    codeData = prodInfo.Dump.drugsData;
+                }
+                if (prodInfo.Dump.lpData) {
+                    codeData = prodInfo.Dump.lpData.codeData;
+                }
+                if (codeData) {
+                    if (!cis) {
+                        cis = codeData.cis;
+                    }
                     if (!gtin) {
-                        gtin = drugsDataCode.gtin;
+                        gtin = codeData.gtin;
                     }
                     if (!sgtin) {
-                        sgtin = drugsDataCode.sgtin;
+                        sgtin = codeData.sgtin;
                     }
                 }
+                /** Индивидуальный код с серийным номером */
+                const isIndividual = !!prodInfo.ExpireDate || !!sgtin;
                 const newCats = [];
                 const catalogDataArr = prodInfo.Dump.catalogData;
                 let catalogDataObj;
@@ -354,19 +352,27 @@ class Scanner {
                 return;
             }
             str = str.replace("%", "процентов");
+            const replaceQuotes = new RegExp('\"', "g");
+            str = str.replace(replaceQuotes, " ");
             return yield new Promise((resolve, reject) => {
-                child_process_1.exec(`spd-say --wait -o rhvoice -l ru  -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
-                    if (error) {
-                        console.log(`error: ${error.message}`);
-                        return;
-                    }
-                    if (stderr) {
-                        console.log(`stderr: ${stderr}`);
-                        return;
-                    }
-                    console.log(`stdout: ${stdout}`);
-                    resolve();
-                });
+                this.lock.acquire("say", (done) => {
+                    console.log("say enter", str);
+                    child_process_1.exec(`spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
+                        if (error) {
+                            console.log(`error: ${error.message}`);
+                            return;
+                        }
+                        if (stderr) {
+                            console.log(`stderr: ${stderr}`);
+                            return;
+                        }
+                        console.log(`stdout: ${stdout}`);
+                        done();
+                        resolve();
+                    });
+                }, (err, ret) => {
+                    console.log("say release");
+                }, {});
             });
         });
     }
@@ -402,6 +408,7 @@ class Scanner {
     Init() {
         return __awaiter(this, void 0, void 0, function* () {
             Scanner.Instance = this;
+            Scanner.lock = new async_lock_1.default();
             // dotenv.config({ path: '../.env' });
             this.InitMysql();
             this.barcodeDb = new barcodedb_1.BarcodeDb();
