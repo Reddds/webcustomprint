@@ -43,6 +43,7 @@ const barcodedb_1 = require("./barcodedb");
 const child_process_1 = require("child_process");
 const PrintByQr = __importStar(require("./printbyqr"));
 const chestznak_1 = require("./chestznak");
+const utils_1 = require("./utils");
 class Scanner {
     // /**
     //  *
@@ -57,6 +58,22 @@ class Scanner {
         }
         res += str;
         return res;
+    }
+    getDifferenceInDays(date1, date2) {
+        const diffInMs = date2 - date1;
+        return diffInMs / (1000 * 60 * 60 * 24);
+    }
+    getDifferenceInHours(date1, date2) {
+        const diffInMs = date2 - date1;
+        return diffInMs / (1000 * 60 * 60);
+    }
+    getDifferenceInMinutes(date1, date2) {
+        const diffInMs = date2 - date1;
+        return diffInMs / (1000 * 60);
+    }
+    getDifferenceInSeconds(date1, date2) {
+        const diffInMs = date2 - date1;
+        return diffInMs / 1000;
     }
     AddToBase(scanned, prodInfo) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -191,6 +208,10 @@ class Scanner {
             // =================================================================
             // Если ШК начинается с домашенго префикса
             if (data.startsWith(PrintByQr.HomeQrPrefix)) {
+                if (!this.printByQrSettings) {
+                    console.error("this.printByQrSettings empty");
+                    return;
+                }
                 const code = data.substring(PrintByQr.HomeQrPrefix.length);
                 const qrFound = this.printByQrSettings.find(qs => qs.Code === code);
                 if (!qrFound) {
@@ -226,17 +247,20 @@ class Scanner {
                     if (prodInfo.ExpireDate) {
                         const now = Date.now();
                         const expDate = new Date(prodInfo.ExpireDate);
-                        const diff = prodInfo.ExpireDate - now;
+                        const diff = this.getDifferenceInDays(now, prodInfo.ExpireDate);
+                        // console.log("diff", diff);
+                        // console.log("Math.abs(diff)", Math.abs(diff));
+                        const dayStr = utils_1.dayLetters(Math.abs(Math.floor(diff)));
                         if (diff <= 0) {
                             console.log("now", now);
                             console.log("prodInfo.ExpireDate", prodInfo.ExpireDate);
-                            yield Scanner.Say("Просрочено!");
+                            yield Scanner.Say(`Просрочено на ${dayStr}`);
                         }
                         else {
                             // const dateStr = expDate.toLocaleDateString('ru-RU', { year: 'numeric', month: 'numeric', day: 'numeric' });
-                            const dateStr = `${expDate.getDate()} ${expDate.getMonth() + 1} ${expDate.getFullYear()}`;
-                            yield Scanner.Say("Годен до");
-                            yield Scanner.Say(dateStr);
+                            // const dateStr = `${expDate.getDate()} ${expDate.getMonth() + 1} ${expDate.getFullYear()}`;
+                            yield Scanner.Say(`Годен ещё ${dayStr}`);
+                            // await Scanner.Say(dateStr);
                         }
                     }
                     return;
@@ -359,11 +383,13 @@ class Scanner {
                     console.log("say enter", str);
                     child_process_1.exec(`spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
                         if (error) {
-                            console.log(`error: ${error.message}`);
+                            console.error(error.message);
+                            done();
                             return;
                         }
                         if (stderr) {
-                            console.log(`stderr: ${stderr}`);
+                            console.error(`stderr: ${stderr}`);
+                            done();
                             return;
                         }
                         console.log(`stdout: ${stdout}`);
@@ -372,7 +398,7 @@ class Scanner {
                     });
                 }, (err, ret) => {
                     console.log("say release");
-                }, {});
+                }, { maxOccupationTime: 20000 });
             });
         });
     }

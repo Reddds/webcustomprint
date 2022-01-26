@@ -12,6 +12,7 @@ import { BarcodeDb } from "./barcodedb";
 import { exec } from "child_process";
 import * as PrintByQr from "./printbyqr";
 import { ChesZnak, ProdInfo } from "./chestznak";
+import { dayLetters } from "./utils";
 
 // console.log("scanner pid", process.pid);
 
@@ -82,6 +83,26 @@ export class Scanner {
         }
         res += str;
         return res;
+    }
+
+    private getDifferenceInDays(date1, date2) {
+        const diffInMs = date2 - date1;
+        return diffInMs / (1000 * 60 * 60 * 24);
+    }
+
+    private getDifferenceInHours(date1, date2) {
+        const diffInMs = date2 - date1;
+        return diffInMs / (1000 * 60 * 60);
+    }
+
+    private getDifferenceInMinutes(date1, date2) {
+        const diffInMs = date2 - date1;
+        return diffInMs / (1000 * 60);
+    }
+
+    private getDifferenceInSeconds(date1, date2) {
+        const diffInMs = date2 - date1;
+        return diffInMs / 1000;
     }
 
     private async AddToBase(scanned: string, prodInfo: ProdInfo) {
@@ -265,6 +286,10 @@ export class Scanner {
         // =================================================================
         // Если ШК начинается с домашенго префикса
         if (data.startsWith(PrintByQr.HomeQrPrefix)) {
+            if (!this.printByQrSettings) {
+                console.error("this.printByQrSettings empty");
+                return;
+            }
             const code = data.substring(PrintByQr.HomeQrPrefix.length);
             const qrFound = this.printByQrSettings.find(qs => qs.Code === code);
             if (!qrFound) {
@@ -305,16 +330,19 @@ export class Scanner {
                 if (prodInfo.ExpireDate) {
                     const now = Date.now();
                     const expDate = new Date(prodInfo.ExpireDate);
-                    const diff = prodInfo.ExpireDate - now;
+                    const diff = this.getDifferenceInDays(now, prodInfo.ExpireDate);
+                    // console.log("diff", diff);
+                    // console.log("Math.abs(diff)", Math.abs(diff));
+                    const dayStr = dayLetters(Math.abs(Math.floor(diff)));
                     if (diff <= 0) {
                         console.log("now", now);
                         console.log("prodInfo.ExpireDate", prodInfo.ExpireDate);
-                        await Scanner.Say("Просрочено!");
+                        await Scanner.Say(`Просрочено на ${dayStr}`);
                     } else {
                         // const dateStr = expDate.toLocaleDateString('ru-RU', { year: 'numeric', month: 'numeric', day: 'numeric' });
-                        const dateStr = `${expDate.getDate()} ${expDate.getMonth() + 1} ${expDate.getFullYear()}`;
-                        await Scanner.Say("Годен до");
-                        await Scanner.Say(dateStr);
+                        // const dateStr = `${expDate.getDate()} ${expDate.getMonth() + 1} ${expDate.getFullYear()}`;
+                        await Scanner.Say(`Годен ещё ${dayStr}`);
+                        // await Scanner.Say(dateStr);
                     }
                 }
 
@@ -447,11 +475,13 @@ export class Scanner {
                 console.log("say enter", str);
                 exec(`spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
                     if (error) {
-                        console.log(`error: ${error.message}`);
+                        console.error(error.message);
+                        done();
                         return;
                     }
                     if (stderr) {
-                        console.log(`stderr: ${stderr}`);
+                        console.error(`stderr: ${stderr}`);
+                        done();
                         return;
                     }
                     console.log(`stdout: ${stdout}`);
@@ -459,9 +489,10 @@ export class Scanner {
                     done();
                     resolve();
                 });
+
             }, (err, ret) => {
                 console.log("say release");
-            }, {});
+            }, { maxOccupationTime: 20000 });
 
 
 

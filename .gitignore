@@ -110,3 +110,5 @@ dist/scan.js.map
 dist/scanner.js
 dist/scanner.js.map
 
+dist/utils.js.map
+dist/utils.js
