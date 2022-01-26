@@ -294,7 +294,7 @@ class Scanner {
     GetExistProds() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const [rowsExist, fieldsExist] = yield this.dbPool.execute(`SELECT * FROM prods WHERE is_trashed=0 ORDER BY exp_date`);
+                const [rowsExist, fieldsExist] = yield this.dbPool.execute(`SELECT * FROM prods WHERE is_trashed=0 ORDER BY exp_date IS NULL, exp_date`);
                 return rowsExist.map(prod => {
                     // Проценты просрочки относительно недели
                     let expPercent = 0;

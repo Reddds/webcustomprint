@@ -380,7 +380,7 @@ export class Scanner {
 
     public async GetExistProds(): Promise<IExistProd[]> {
         try {
-            const [rowsExist, fieldsExist] = await this.dbPool.execute<IProd[]>(`SELECT * FROM prods WHERE is_trashed=0 ORDER BY exp_date`);
+            const [rowsExist, fieldsExist] = await this.dbPool.execute<IProd[]>(`SELECT * FROM prods WHERE is_trashed=0 ORDER BY exp_date IS NULL, exp_date`);
             return rowsExist.map(prod => {
 
                 // Проценты просрочки относительно недели

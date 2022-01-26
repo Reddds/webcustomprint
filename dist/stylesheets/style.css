@@ -74,3 +74,8 @@ img.exist-prod-image {
 .exist-prod-image-cell {
     text-align: center;
 }
+
+img.modal-prod-img {
+    max-width: 100%;
+    max-height: 70vh;
+}

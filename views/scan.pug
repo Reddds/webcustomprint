@@ -26,14 +26,36 @@ block content
           tr
             td.exist-prod-image-cell
               if prod.img
-                img.exist-prod-image(src=prod.img, alt="Изображение товара")
+                a.btn(data-bs-toggle="modal" data-bs-target="#imgModal" data-bs-img-url=prod.img, data-bs-prod-name=prod.name)
+                  img.exist-prod-image(src=prod.img, alt="Изображение товара")
             td= prod.name
             td= prod.expDate
             td 
-              .progress
-                - var styleWidth = "width: " + prod.expPercent + '%';
-                - var daysLeft = prod.daysLeft ? prod.daysLeft + " дн" : undefined
-                .progress-bar(role="progressbar", style=styleWidth, aria-valuenow=prod.expPercent, aria-valuemin="0", aria-valuemax="100")= daysLeft
+              if prod.daysLeft
+                if prod.daysLeft > 0
+                  .progress
+                    - var styleWidth = "width: " + prod.expPercent + '%';
+                    - var daysLeft = prod.daysLeft > 5 ? prod.daysLeft + " дн" : undefined
+                    .progress-bar(role="progressbar", style=styleWidth, aria-valuenow=prod.expPercent, aria-valuemin="0", aria-valuemax="100")= daysLeft
+                else
+                  span.badge.bg-danger 
+                    | Просрочено 
+                    strong= -prod.daysLeft 
+                    |
+                    | дн!
   else
     h3 Нет внесённых товаров
+
+block modals
+  .modal.fade#imgModal(tabindex="-1")
+    .modal-dialog.modal-xl
+      .modal-content
+        .modal-header
+          h5.modal-title Изображение товара
+          button.btn-close(type="button", data-bs-dismiss="modal", aria-label="Close")
+        .modal-body.text-center
+          img.modal-prod-img
+
+block scripts 
+  script(src='./scan.page.js')
 

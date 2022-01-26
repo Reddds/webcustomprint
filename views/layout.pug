@@ -5,9 +5,11 @@ html
     link(rel='icon', type="image/png", href='/images/receipt64.png')
     link(rel='stylesheet', href='/stylesheets/style.css')
     link(rel='stylesheet', href="/bootstrap/css/bootstrap.css")
+    
+    script(src='/bootstrap/js/bootstrap.min.js')
+    script(src='/jquery/jquery.min.js')
+    script(src='/jquery.imagehalftone.js')
     block scripts
-      script(src='/bootstrap/js/bootstrap.min.js')
-      script(src='/jquery/jquery.min.js')
-      script(src='/jquery.imagehalftone.js')
   body
     block content
+    block modals
