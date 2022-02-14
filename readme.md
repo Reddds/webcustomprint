@@ -2,10 +2,32 @@ Web service for print on connected Custom VKP80 printer on Linux.
 
 Printer connected by USB and present as /dev/usb/lp0
 
+# prerequisites
+## node
+```
+   1. which node
+   2. sudo ln -s /home/ubuntu/.nvm/versions/node/v12.13.1/bin/node (output of above step) /usr/bin/node
+```
+
+## mysql
+https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-20-04-ru
+https://www.digitalocean.com/community/tutorials/how-to-allow-remote-access-to-mysql
+
+## pulseaudio
+1. in /etc/pulse/default.pa
+`load-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket`
+
+2. add to user and root ~/.config/pulse/client.conf
+`default-server = unix:/tmp/pulse-socket`
+
+
+
 # Installation
 
+
+
 `npm install`
-`sudo ./install.sh`
+`sudo ./install.sh <UserName(not root)>`
 
 # Webpage
 At address <ip address>:3000
@@ -64,3 +86,31 @@ Autostart
 `sudo systemctl enable webcustomprint`
 
 
+
+
+# Errors
+
+Error opening port:  Error: Permission denied, cannot open /dev/ttyACM0
+
+variants:
+
+1. apt remove modemmanager
+
+2. 
+```
+ls -l /dev/ttyACM*
+
+sudo adduser YourUserName GroupToJoin
+```
+
+3. change permission of /dev/ttyACM0
+
+--------
+Can't connect to unix socket /root/.cache/speech-dispatcher/speechd.sock
+
+enter bash under no root
+
+-----------
+No sound
+
+sudo usermod -aG `cat /etc/group | grep -e '^pulse:' -e '^audio:' -e '^pulse-access:' -e '^pulse-rt:' -e '^video:' | awk -F: '{print $1}' | tr '\n' ',' | sed 's:,$::g'` `whoami`

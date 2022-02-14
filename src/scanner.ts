@@ -105,6 +105,10 @@ export class Scanner {
         return diffInMs / 1000;
     }
 
+    private CleanCode(str: string) {
+        return str.replace(/\W/g, "_");// "\u001d"
+    }
+
     private async AddToBase(scanned: string, prodInfo: ProdInfo) {
         if (this.dbPool) {
 
@@ -158,7 +162,10 @@ export class Scanner {
             if (catalogDataArr && catalogDataArr.length > 0) {
                 const catalogData = catalogDataArr[0];
 
-                const imageUrl = catalogData.good_img;
+                let imageUrl = catalogData.good_img;
+                if (!imageUrl && catalogData.good_images && catalogData.good_images.length > 0) {
+                    imageUrl = catalogData.good_images[0].photo_url;
+                }
                 if (!producer)
                     producer = catalogData.producer_name;
                 const catalogGoodId = catalogData.good_id;
@@ -190,6 +197,7 @@ export class Scanner {
                     // }
 
                 });
+
 
 
             }
@@ -260,7 +268,15 @@ export class Scanner {
                     await dbCon.query('INSERT INTO prods_by_caterories SET ?', prodToCat);
                 });
             } else {
-                console.log(`prod already exists. code='${post.code}'`);
+                // console.log("Prod exists!");
+                // const msg = `prod already exists. code=${String(post.code)}`;
+                console.log("Prod exists", `prod already exists. code=${this.CleanCode(post.code)}`);
+                // console.log("Prod exists", `prod already exists.`);
+                // console.log("post", post);
+                // console.log("code", post.code);
+                // console.log("code", post.code.toString());
+                // console.log("code", typeof post.code);
+                // console.log("Prod exists __ 1!");
                 if (existRow && !existRow.ChesZnakDump) {
                     console.log(`Update ChesZnakDump id=${existRow.id}`);
                     // await dbCon.execute(`UPDATE prods SET ChesZnakDump = '${JSON.stringify(prodInfo.Dump)}' WHERE id = ${existRow.id}`,
@@ -349,7 +365,7 @@ export class Scanner {
                 return;
             }
         } catch (error) {
-            console.log(error);
+            console.log("Error!", error);
         }
 
 
@@ -462,47 +478,75 @@ export class Scanner {
         });
     }
 
-    private static async Say(str: string) {
+    private static _isplaying: boolean;
+    private static _sayArray: string[] = [];
+
+    private static async SayCommand(str: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this._isplaying = true;
+            // this.lock.acquire("say", (done) => {
+            console.log("say enter", str);
+            exec(`spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(error.message);
+                    // done();
+                    this._isplaying = false;
+                    reject();
+                    return;
+                }
+                if (stderr) {
+                    console.error(`stderr: ${stderr}`);
+                    // done();
+                    this._isplaying = false;
+                    reject();
+                    return;
+                }
+                console.log(`stdout: ${stdout}`);
+                this._isplaying = false;
+                // done();
+                resolve();
+            });
+
+            // }, (err, ret) => {
+            //     console.log("say release");
+            // }, { maxOccupationTime: 20000 });
+
+
+
+        }).catch((error) => {
+            console.error(`reject error: ${error}`);
+        });
+    }
+
+    private static async Say(str: string): Promise<void> {
         if (process.env.SILENCE === "1") {
             return;
         }
         str = str.replace("%", "процентов");
         const replaceQuotes = new RegExp('\"', "g");
         str = str.replace(replaceQuotes, " ");
-        return await new Promise<void>((resolve, reject) => {
 
-            this.lock.acquire("say", (done) => {
-                console.log("say enter", str);
-                exec(`spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
-                    if (error) {
-                        console.error(error.message);
-                        done();
-                        return;
-                    }
-                    if (stderr) {
-                        console.error(`stderr: ${stderr}`);
-                        done();
-                        return;
-                    }
-                    console.log(`stdout: ${stdout}`);
+        this._sayArray.push(str);
+        if (this._isplaying) {
+            console.log("Already saying now");
+            return;
+        }
 
-                    done();
-                    resolve();
-                });
+        while (this._sayArray.length > 0) {
+            const strTosay = this._sayArray.splice(0, 1)[0];
+            if (strTosay) {
+                console.log("Saying", strTosay);
+                await this.SayCommand(strTosay);
+            }
+        }
 
-            }, (err, ret) => {
-                console.log("say release");
-            }, { maxOccupationTime: 20000 });
-
-
-
-        });
+        return;
     }
 
 
     private async InitMysql() {
         try {
-            console.log('Get mysql connection ...');
+            console.log(`Get mysql connection for login '${process.env.DB_LOGIN}' ...`);
             // this.dbCon = await mysql.createConnection({
             //     database: 'prods',
             //     host: "localhost",
