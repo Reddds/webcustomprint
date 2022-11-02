@@ -21,10 +21,12 @@ const app = express_1.default();
 app.set('views', path_1.default.join(__dirname, '../views'));
 app.set('view engine', 'pug');
 app.use(morgan_1.default('dev'));
-app.use(express_1.default.json());
-app.use(express_1.default.urlencoded({ extended: false }));
+app.use(express_1.default.json({ limit: '10mb' }));
+app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookie_parser_1.default());
 app.use(express_1.default.static(__dirname)); // path.join(__dirname, 'public')
+// app.use(bodyParser.json({ limit: '10mb' }));
+// app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/', index_1.default);
 app.use('/users', users_1.default);
 app.use('/shoppinglist', shoppinglist_1.default);

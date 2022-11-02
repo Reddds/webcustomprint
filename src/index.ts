@@ -40,13 +40,23 @@ function ReadFiles(dir: PathLike): printedWithFileName[] {
   return printeds;
 }
 
+function getPrinterType(): string {
+  switch (process.env.USE_PRINTER) {
+    case "custom80":
+      return "custom";
+    case "citizenCLP-521":
+      return "citizen";
+  }
+  return undefined;
+}
+
 /* GET home page. */
 router.get('/', (req, res, next) => {
 
   const awards = ReadFiles(`${__dirname}/printSrc`);
   const printeds = ReadFiles(`${__dirname}/prints`);
 
-  res.render('index', { title: 'Печать', awards, printeds });
+  res.render('index', { title: 'Печать', printer: getPrinterType(), awards, printeds });
 });
 
 router.delete('/', (req, res, next) => {

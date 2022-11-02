@@ -79,3 +79,7 @@ img.modal-prod-img {
     max-width: 100%;
     max-height: 70vh;
 }
+
+.group-name {
+    text-transform: uppercase;
+}

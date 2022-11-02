@@ -2,16 +2,17 @@ Web service for print on connected Custom VKP80 printer on Linux.
 
 Printer connected by USB and present as /dev/usb/lp0
 
-# prerequisites
+# Prerequisites
 ## node
 ```
    1. which node
    2. sudo ln -s /home/ubuntu/.nvm/versions/node/v12.13.1/bin/node (output of above step) /usr/bin/node
 ```
 
-## mysql
+## Mysql
 https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-20-04-ru
 https://www.digitalocean.com/community/tutorials/how-to-allow-remote-access-to-mysql
+
 
 ## pulseaudio
 1. in /etc/pulse/default.pa
@@ -20,11 +21,31 @@ https://www.digitalocean.com/community/tutorials/how-to-allow-remote-access-to-m
 2. add to user and root ~/.config/pulse/client.conf
 `default-server = unix:/tmp/pulse-socket`
 
+New!
+Run as service!
+https://blog.bayrell.org/ru/linux/ubuntu/107-nastrojka-pulseaudio-cherez-systemd-v-ubuntu-18-04.html
+add user and root to pulse-access group
+add pulse to audio group
 
+system.pa:
+load-module module-cli-protocol-unix
+
+ export PULSE_RUNTIME_PATH="/var/run/pulse/"
+
+
+## Access to printer
+
+usermod -a -G lp <username>
 
 # Installation
 
-
+create **.env** file in root
+```
+DB_LOGIN=...
+DB_PASSWORD=...
+# custom80, citizenCLP-521
+USE_PRINTER=custom80
+```
 
 `npm install`
 `sudo ./install.sh <UserName(not root)>`
@@ -96,7 +117,7 @@ variants:
 
 1. apt remove modemmanager
 
-2. 
+2. add user to group **lp**
 ```
 ls -l /dev/ttyACM*
 

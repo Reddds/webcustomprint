@@ -5,6 +5,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const node_cp866buffer_1 = __importDefault(require("node-cp866buffer"));
+// let printerFileName = "";
+// switch (process.env.USE_PRINTER) {
+//     case "custom80":
+//         printerFileName = "/dev/usb/lp0";
+//         break;
+//     case "citizenCLP-521":
+//         printerFileName = "/dev/usb/lp0";
+//         break;
+// }
 const printerFile = "/dev/usb/lp0";
 const cutAndEject = new Uint8Array([0x0a, 0x1b, 0x69, 0x1d, 0x65, 0x05]);
 exports.page33 = {
@@ -31,13 +40,173 @@ exports.page56 = {
     cpiMode: 1,
     content: ""
 };
+function PrintImageCuctom(buf) {
+    const bufWithCut = new Uint8Array([...buf, ...cutAndEject]);
+    fs_1.default.writeFileSync(printerFile, bufWithCut);
+}
+/**
+ * Преобразование строки в массив
+ * Спцсимволы:
+ * [1b] - преобразуется в hex
+ * @param str Строка со спецсимволами
+ * @returns Массив
+ */
+function strToNumArr(str) {
+    const retArr = [];
+    for (let i = 0; i < str.length; i++) {
+        const charcode = str.charCodeAt(i);
+        // Перенос строки запишем
+        if (charcode === 0x0D) {
+            retArr.push(0x0D);
+            continue;
+        }
+        // Пропускаем пробелы, табуляцию и прочую ерунду
+        if (charcode === 0x20 || charcode == 0x09) {
+            continue;
+        }
+        if (charcode >= 0x80 || charcode < 0x20) {
+            console.error(`Присутствуют недопустимые знаки! '${str.charAt(i)}'`);
+            return null;
+        }
+        if (str.charAt(i) === '[') {
+            if (str.charAt(i + 3) !== ']') {
+                console.error("Не найдена закрывающая квадратная скобка!");
+                return null;
+            }
+            const val = (parseInt(str.charAt(i + 1), 16) << 4) | parseInt(str.charAt(i + 2), 16);
+            retArr.push(val);
+            i += 3;
+            continue;
+        }
+        retArr.push(str.charCodeAt(i));
+    }
+    return new Uint8Array(retArr);
+}
+exports.strToNumArr = strToNumArr;
+function PrintImageCitizen(buf) {
+    // [mode] [width in bytes (2b)] [height in rows (2b)]
+    const mode = buf[0];
+    const widthInBytes = (buf[2] << 8) | buf[1];
+    const height = (buf[4] << 8) | buf[3];
+    console.log("widthInBytes", widthInBytes);
+    console.log("height", height);
+    if (widthInBytes * height + 5 !== buf.length) {
+        console.error("Buffer len error!", `counted: ${widthInBytes * height + 5}, recived: ${buf.length}`);
+        return;
+    }
+    // 203 dpi
+    const dpi = 203;
+    const heightMm = Math.ceil(height / dpi * 25.4);
+    // header
+    let startStr = "";
+    // select command set DMI or DMW
+    startStr += "[02][1B]G0[0d][0a]";
+    // to mm
+    startStr += "[02]m[0d][0a]";
+    // max label length 10 cm !!!!!
+    startStr += "[02]M0300[0d][0a]";
+    // set printing pos min 30,5 mm
+    startStr += "[02]O0500[0d][0a]";
+    // set mem switch contents (not care)
+    startStr += "[02]V0[0d][0a]";
+    // set ejection 1 - on
+    startStr += "[02][1B]t1[0d][0a]";
+    // peeling (cutting) position (inch | mm)
+    startStr += "[02]Kf0120[0d][0a]";
+    // paper length for continuous
+    let heightMmStr = String(heightMm + 20); // 20 mm field
+    heightMmStr = heightMmStr.padStart(3, "0");
+    startStr += `[02]c${heightMmStr}0[0d][0a]`;
+    /*graphic input
+        C - currnt mem, D - onboard sd-ram
+        _ - 8 bit (A - 7bit)
+        P - 8bitPCX normal, B - 8bit BMP normal, i - 8bit image format normal
+        gfx0 - name of file
+    */
+    startStr += "[02]ICigfx0[0d][0a]";
+    //--------------------------------------------
+    startStr += "[00][01][00][08][00][01][00][02][00][7f][00][7f][00][e0]";
+    const startPart = strToNumArr(startStr);
+    // image data!
+    const imageArr = [height >> 8, height & 0xFF];
+    const startByte = 5;
+    for (let y = 0; y < height; y++) {
+        imageArr.push(0x80, widthInBytes);
+        for (let x = 0; x < widthInBytes; x++) {
+            imageArr.push(buf[startByte + y * widthInBytes + x]);
+        }
+    }
+    // end
+    let endStr = "";
+    // ending code
+    endStr += "[46][46][46][46]";
+    // --------------------------------------------
+    // printing contents setting start
+    endStr += "[02]L[0d][0a]";
+    // pixel size
+    endStr += "D11[0d][0a]";
+    // ?????
+    endStr += "A2[0d][0a]";
+    endStr += "1Y11000";
+    // start row pos 000.0 mm
+    endStr += "0000";
+    // start col pos 000.0 mm
+    endStr += "0000";
+    // image name
+    endStr += "gfx0[0d][0a]";
+    // 1 copy
+    endStr += "Q0001[0d][0a]";
+    // print!
+    endStr += "E[0d][0a]";
+    // clear mem
+    endStr += "[02]xCGgfx0[0d][0a]";
+    // ???
+    endStr += "[02]zC[0d][0a]";
+    const endPart = strToNumArr(endStr);
+    //
+    const bufWithCut = new Uint8Array([...startPart, ...imageArr, ...endPart]);
+    const dir = "prints";
+    const savedFile = `${__dirname}/${dir}/print_${Date.now()}`; // "/dev/usb/lp0";
+    fs_1.default.writeFileSync(savedFile, bufWithCut);
+    fs_1.default.writeFileSync(printerFile, bufWithCut);
+}
+/**
+ * print base 64 data
+ * @param raw base 64
+ */
 function PrintRaw(raw) {
     console.log("printing raw...");
     const fullBuf = new Uint8Array(Buffer.from(raw, 'base64'));
-    const bufWithCut = new Uint8Array([...fullBuf, ...cutAndEject]);
-    fs_1.default.writeFileSync(printerFile, bufWithCut);
+    switch (process.env.USE_PRINTER) {
+        case "custom80":
+            PrintImageCuctom(fullBuf);
+            break;
+        case "citizenCLP-521":
+            PrintImageCitizen(fullBuf);
+            break;
+    }
 }
 exports.PrintRaw = PrintRaw;
+/**
+ * print string
+ * @param raw string data
+ */
+function PrintRawStr(raw) {
+    console.log("printing raw string...");
+    const fullBuf = new Uint8Array(Buffer.from(raw));
+    const bufWithCut = fullBuf; // new Uint8Array([...fullBuf, ...cutAndEject]); // 
+    console.log("bufWithCut", bufWithCut);
+    fs_1.default.writeFileSync(printerFile, bufWithCut);
+}
+exports.PrintRawStr = PrintRawStr;
+function PrintRawBuf(raw) {
+    console.log("printing raw buffer...");
+    //const fullBuf = new Uint8Array(Buffer.from(raw));
+    //const bufWithCut = fullBuf;// new Uint8Array([...fullBuf, ...cutAndEject]); // 
+    //console.log("bufWithCut", bufWithCut);
+    fs_1.default.writeFileSync(printerFile, raw);
+}
+exports.PrintRawBuf = PrintRawBuf;
 // Печать ШК
 // HRI [GS][\x48][\x0]
 // [GS][\x6B][\x8]tessst[\x0]

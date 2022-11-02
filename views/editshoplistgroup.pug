@@ -1,0 +1,27 @@
+block content
+  | Содержимое 
+  span=group.groupName
+  if group.message 
+    .alert.alert-primary(role="alert")
+      =group.message 
+  table.table.table-striped
+    thead
+      tr
+        th Id
+        th Название
+        th Картинка
+        th
+    tbody 
+      each prod in group.prods
+        tr
+          th(scope="row")
+            =prod.id 
+          td
+            =prod.name
+          td 
+            if prod.image 
+              img(src=prod.image alt="Картинка товара" style="height:50px")
+          td 
+            button.btn.btn-link.addToGroupProdButton(data-prod-id=prod.id, data-prod-name=prod.name, data-prod-image=prod.image, data-group-id=group.groupId, data-group-name=group.groupName) Добавить и в другую группу
+            button.btn.btn-link.editProdButton(data-prod-id=prod.id, data-prod-name=prod.name, data-prod-image=prod.image, data-group-id=group.groupId, data-group-name=group.groupName) Править
+            button.btn.btn-link.deleteProdButton(data-prod-id=prod.id, data-prod-name=prod.name, data-prod-image=prod.image, data-group-id=group.groupId, data-group-name=group.groupName) Удалить

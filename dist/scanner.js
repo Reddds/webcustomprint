@@ -335,9 +335,70 @@ class Scanner {
             }
         });
     }
+    /*
+     select command set DMI or DMW
+    \x02\x1BG0\x0d\x0a
+    to inches
+    \x02n\x0d\x0a
+    max label length 8 inches
+    \x02M0821\x0d\x0a
+    set printing pos (2,14 inch) (distance between paper sensor and print head)
+    0120 - 0320 inch
+    0305 - 0813 mm
+    \x02O0214\x0d\x0a
+    set mem switch contents (not care)
+    \x02V0\x0d\x0a
+    set ejection 1 - on
+    \x02\x1Bt1\x0d\x0a
+    peeling (cutting) position (inch | mm)
+    \x02Kf0070\x0d\x0a
+    paper length for continuous
+    \x02c0329\x0d\x0a
+
+    graphic input
+    C - currnt mem, D - onboard sd-ram
+    _ - 8 bit (A - 7bit)
+    P - 8bitPCX normal, B - 8bit BMP normal, i - 8bit image format normal
+    gfx0 - name of file
+    \x02ICPgfx0\x0d\x0a
+
+    *** - graphic data
+    \x0d\x0a
+
+    printing contents setting start
+    \x02L\x0d\x0a
+    pixel size
+    D11\x0d\x0a
+    ????
+    A2\x0d\x0a
+
+    1 - no rotate
+    Y - fixed
+    1 - horiz expansion 1
+    1 - vert expansion 1
+    000 - fixed
+    row - 0050
+    col - 0041
+    gfx0 - name
+    1Y1100000500041gfx0\x0d\x0a
+    1 copy
+    Q0001\x0d\x0a
+    print!
+    E\x0d\x0a
+
+    C - memory module - current ?
+    G - graphics data
+    gfx0 - name
+    \x02xCGgfx0\x0d\x0a
+
+    ???
+    \x02zC\x0d\x0a
+    */
+    /*
+    "\x02m\x02\1bw0800\x02c0400\x02KD@AB\x0D" */
     InitSerialPort() {
         const parser = new serialport_1.default.parsers.Readline({ delimiter: "\r", encoding: "utf8" });
-        this.port = new serialport_1.default('/dev/ttyACM0', {
+        this.port = new serialport_1.default("/dev/ttyACM0", {
             baudRate: 9600,
             autoOpen: false
         });
@@ -378,6 +439,7 @@ class Scanner {
                 // this.lock.acquire("say", (done) => {
                 console.log("say enter", str);
                 child_process_1.exec(`spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
+                    // exec(`runuser -l basipuser -c 'spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"'`, (error, stdout, stderr) => {
                     if (error) {
                         console.error(error.message);
                         // done();

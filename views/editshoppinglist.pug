@@ -1,0 +1,97 @@
+extends layout
+
+
+
+
+block content
+
+  h1 Редактирование списка продуктов для покупки
+
+  .container
+    .d-flex.align-items-start
+      .nav.flex-column.nav-pills.me-3#v-pills-tab(role="tablist", aria-orientation="vertical")
+        each group in groupsView
+          button.nav-link.text-start(id=`v-pills-${group.groupId}-tab`, data-bs-toggle="pill", data-bs-target=`#v-pills-${group.groupId}`, type="button", role="tab", aria-controls=`v-pills-${group.groupId}`, aria-selected="true")=group.groupName
+
+      .tab-content#v-pills-tabContent
+        each group in groupsView
+          - var tabId = `group-content-${group.groupId}`
+          .tab-pane.fade(id=`v-pills-${group.groupId}`, role="tabpanel", aria-labelledby=`v-pills-${group.groupId}-tab`)
+            .container(id=tabId)
+              include editshoplistgroup.pug
+            //- | Содержимое 
+            //- span=group.groupName
+            //- table.table.table-striped
+            //-   thead
+            //-     tr
+            //-       th Id
+            //-       th Название
+            //-       th Картинка
+            //-       th
+            //-   tbody 
+            //-     each prod in group.prods
+            //-       tr
+            //-         th(scope="row")
+            //-           =prod.id 
+            //-         td
+            //-           =prod.name
+            //-         td 
+            //-           if prod.image 
+            //-             img(src=prod.image alt="Картинка товара", style="height:50px")
+            //-         td 
+            //-           button.btn.btn-link.editProdButton(data-prod-id=prod.id, data-prod-name=prod.name, data-prod-image=prod.image, data-group-id=group.groupId, data-group-name=group.groupName) Править
+            //-           button.btn.btn-link.deleteProdButton(data-prod-id=prod.id, data-prod-name=prod.name, data-prod-image=prod.image, data-group-id=group.groupId, data-group-name=group.groupName) Удалить
+            button.btn.btn-primary.addProdButton(data-group-id=group.groupId, data-group-name=group.groupName, data-el-id=tabId) Добавить
+
+
+
+  .modal.fade#editProdModal(tabindex="-1")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5.modal-title Изменить товар
+          button.btn-close(type="button", data-bs-dismiss="modal", aria-label="Close")
+        .modal-body
+          form#editProdForm(action="addedit")
+            input#prodId(type="hidden", name="prodId")
+            input#groupId(type="hidden", name="groupId")
+            input#elId(type="hidden", name="elId")
+            .mb-3
+              label.form-label(for="prodName") Название товара
+              input.form-control#prodName(type="text", aria-describedby="prodNameHelp", name="prodName") 
+              .form-text#prodNameHelp До 50 символов
+            .mb-3 
+            | Ctrl+c - вставить из буфера обмена 
+            .mb-3 
+              img(id="prodImg" src="#" alt="Картинка товара", style="width:200px")
+        .modal-footer
+          button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Закрыть
+          button.btn.btn-primary#applyProdEdit(type="button") Сохранить
+
+  .modal.fade#addToGroupModal(tabindex="-1")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5.modal-title Добавление в группу
+          button.btn-close(type="button", data-bs-dismiss="modal", aria-label="Close")
+        .modal-body
+          form#addToGroupForm(action="addtogroup")
+            input.prodId(type="hidden", name="prodId")
+            input.prodName(type="hidden", name="prodName")
+            input.groupId(type="hidden", name="groupId")
+
+            select.form-select#otherGroups(size="20", aria-label="Добавление в другую группу")
+              each group in groupsView
+                option(value=group.groupId)=group.groupName
+        .modal-footer
+          button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Закрыть
+          button.btn.btn-primary#applyAddToGroupEdit(type="button") Сохранить
+
+  //- block scripts
+  script(src='/editshoppinglist.page.js')
+
+              
+
+
+
+    

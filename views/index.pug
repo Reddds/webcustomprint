@@ -7,6 +7,7 @@ block content
   - var titleCols = 8;
   div.container-fluid
     h1= title
+    h3= printer
     h6.fw-light.mb-3 Для печати картинок из буфера обмена, просто вставьте из буфера (Ctrl+V). Чтобы напечатать, нажмите на клавиатуре "Enter". Для печати наград, изменения настроек и прочего нажмите кнопку "Дополнительно"
     div.row
       div.col
@@ -218,6 +219,10 @@ block content
           div.spinner-border(style="width: 3rem; height: 3rem;", role="status")
             span.visually-hidden#busyIndicatorAltLabel
 
+  if printer === "custom"
+    script(src='./printcustom.js')
+  else if printer === "citizen"
+    script(src='./printcitizen.js')
   script(src='./index.page.js')
 
 
