@@ -1,29 +1,20 @@
 extends layout
 
-
-
-
 block content
   div.container-fluid
     h1= title
       button.btn.btn-primary.ms-5#printBtn Печать
       button.btn.btn-outline-secondary.ms-5#clearBtn Очистить
 
-    each groupView in groupsView
-      p.mt-3.group-name=groupView.groupName
+    each group in groupsView
+      - var tabId = `group-content-${group.groupId}`
+      p.mt-3
+        span.group-name=group.groupName
+        button.btn.btn-outline-primary.addProdButton(data-group-id=group.groupId, data-group-name=group.groupName, data-el-id=tabId, data-template-name="shoplistgroup") +
+
       //- var prodInCol = 0;
-      div.d-flex.justify-content-start
-        each prod in groupView.prods  
-          - prodInCol++;
-          div.me-3
-            - var id = `prod_${prod.id}`;
-            input.btn-check.prod-btn(type="checkbox", id=id, autocomplete="off", data-name=prod.name, data-group-id=groupView.groupId, data-group-name=groupView.groupName)
-            label.btn.btn-outline-primary(for=id)
-              if prod.image 
-                img.prod-img(src=prod.image, alt=prod.name)
-              else  
-                img.prod-img(src=`/images/prods/empty.png`, alt=prod.name)
-              span=prod.name
+      div.d-flex.justify-content-start(id=tabId)
+          include shoplistgroup
 
   div.modal#busyIndicator(data-bs-backdrop="static", data-bs-keyboard="false", tabindex="-1", aria-labelledby="staticBackdropLabel", aria-hidden="true")
     div.modal-dialog.modal-dialog-centered
@@ -36,3 +27,5 @@ block content
 
   //- block scripts
   script(src='./shoppinglist.page.js')
+
+  include ./shoppinglistcommon.pug

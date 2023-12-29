@@ -1,5 +1,5 @@
-import usbDetect from 'usb-detection';
-import SerialPort from "serialport";
+// import usbDetect from 'usb-detection';
+import { SerialPort, ReadlineParser } from "serialport";
 import mysql from "mysql2/promise";
 import fs from "fs";
 import AsyncLock from "async-lock";
@@ -13,6 +13,7 @@ import { exec } from "child_process";
 import * as PrintByQr from "./printbyqr";
 import { ChesZnak, ProdInfo } from "./chestznak";
 import { dayLetters } from "./utils";
+import { usb } from "usb";
 
 // console.log("scanner pid", process.pid);
 
@@ -496,18 +497,19 @@ export class Scanner {
     \x02zC\x0d\x0a 
     */
 
-  /*
-  "\x02m\x02\1bw0800\x02c0400\x02KD@AB\x0D" */
+    /*
+    "\x02m\x02\1bw0800\x02c0400\x02KD@AB\x0D" */
 
-    
+
 
 
     private InitSerialPort(): void {
-        const parser = new SerialPort.parsers.Readline({ delimiter: "\r", encoding: "utf8" });
+        const parser = new ReadlineParser({ delimiter: "\r", encoding: "utf8" }); //new 
 
 
 
-        this.port = new SerialPort("/dev/ttyACM0", {
+        this.port = new SerialPort({
+            path: "/dev/ttyACM0",
             baudRate: 9600,
             autoOpen: false
         });
@@ -557,7 +559,7 @@ export class Scanner {
             console.log("say enter", str);
 
             exec(`spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
-            // exec(`runuser -l basipuser -c 'spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"'`, (error, stdout, stderr) => {
+                // exec(`runuser -l basipuser -c 'spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"'`, (error, stdout, stderr) => {
                 if (error) {
                     console.error(error.message);
                     // done();
@@ -669,30 +671,48 @@ export class Scanner {
 
         console.log("Init scanner monitoring...");
         //  Detect scanner 05f9:4204
-        usbDetect.startMonitoring();
+        //usbDetect.startMonitoring();
+        /*
+            usbDetect.startMonitoring() & usbDetect.stopMonitoring()
+            There is no direct equivalent to these methods. 
+            This is handled automatically for you when you add and remove event listeners.
+        */
+        usb.refHotplugEvents();
 
-        usbDetect.on('add:1529:16900', (device) => {
+        usb.on('attach', (device) => { // usbDetect.on('add:1529:16900', (device)
             console.log('adding');
             console.log('add', device);
 
-            this.OpenPort();
+            /*
+                There is no equivalent to filter based on the vid or pid, instead you should do a check inside the callback you provide.
+                The contents of the device object has also changed.
+            */
 
-            usbDetect.find(0x05f9, 0x4204, (err, devices) => {
-                console.log('find', devices, err);
-            });
+
+            //!!!this.OpenPort();
+
+
+            // usbDetect.find(0x05f9, 0x4204, (err, devices) => {
+            //     console.log('find', devices, err);
+            // });
+
+            // const dev = usb.findByIds(0x05f9, 0x4204);
+            // console.log('find', dev);
 
         });
 
-        usbDetect.on('remove:1529:16900', (device) => {
+        usb.on("detach", (device) => { // usbDetect.on('remove:1529:16900', (device)
+            //TODO need filter!
             console.log('removing');
             console.log('remove', device);
-            this.ClosePort();
+            //!!!this.ClosePort();
         });
 
+        /*!!!
         usbDetect.find(0x05f9, 0x4204, (err, devices) => {
             console.log('find', devices, err);
             this.OpenPort();
-        });
+        });*/
 
         this.InitSerialPort();
 

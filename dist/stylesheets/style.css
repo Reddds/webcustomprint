@@ -82,4 +82,10 @@ img.modal-prod-img {
 
 .group-name {
     text-transform: uppercase;
+    margin-right: 20px;
+}
+
+.prod-quantity {
+    margin-left: 10px;
+    font-weight: bold;
 }

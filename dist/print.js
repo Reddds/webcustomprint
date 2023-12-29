@@ -152,11 +152,11 @@ function testCitizenImage() {
     prn += "[02]xCGgfx0[0d][0a]";
     // ???
     prn += "[02]zC[0d][0a]";
-    const prnData = printerutils_1.strToNumArr(prn);
+    const prnData = (0, printerutils_1.strToNumArr)(prn);
     const dir = "prints";
     const savedFile = `${__dirname}/${dir}/print_${Date.now()}`; // "/dev/usb/lp0";
     fs_1.default.writeFileSync(savedFile, prnData);
-    printerutils_1.PrintRawBuf(prnData);
+    (0, printerutils_1.PrintRawBuf)(prnData);
 }
 router.post('/', (req, res, next) => {
     // console.log(req);
@@ -179,15 +179,15 @@ router.post('/', (req, res, next) => {
     const raw = req.body.raw;
     const forPrint = {
         title: title !== null && title !== void 0 ? title : new Date().toISOString(),
-        printMode: printModeVal,
-        lineSpacing: lineSpacingVal,
-        charFont: charFontVal,
-        cpiMode: cpiModeVal,
+        printMode: printModeVal, // 0x01,
+        lineSpacing: lineSpacingVal, // 0
+        charFont: charFontVal, // 0x01,
+        cpiMode: cpiModeVal, // 0x01,
         content: textForPrint
     };
     try {
         if (raw) {
-            printerutils_1.PrintRaw(raw);
+            (0, printerutils_1.PrintRaw)(raw);
             // console.log("printing raw...");
             // const fullBuf = new Uint8Array(Buffer.from(raw, 'base64'));
             // const bufWithCut = new Uint8Array([...fullBuf, ...cutAndEject]);
@@ -196,7 +196,7 @@ router.post('/', (req, res, next) => {
         else {
             fs_1.default.writeFileSync(savedFile, JSON.stringify(forPrint));
             if (action === "print") {
-                printerutils_1.PrintText(textForPrint, forPrint);
+                (0, printerutils_1.PrintText)(textForPrint, forPrint);
                 // const setupBuf = new Uint8Array([
                 //     0x1b, 0x21, forPrint.printMode,
                 //     0x1b, 0x33, forPrint.lineSpacing,

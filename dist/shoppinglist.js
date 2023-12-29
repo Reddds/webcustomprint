@@ -91,7 +91,8 @@ router.get('/', (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         const groupProds = prods.filter(p => prodsId.includes(p.Id)).map(p => ({
             id: p.Id,
             name: p.Name,
-            image: p.Image
+            image: p.Image,
+            addCountType: p.AddCountType
         }));
         if (groupProds && groupProds.length > 0) {
             const existGrView = {
@@ -119,7 +120,8 @@ router.get('/edit', (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         const groupProds = prods.filter(p => prodsId.includes(p.Id)).map(p => ({
             id: p.Id,
             name: p.Name,
-            image: p.Image
+            image: p.Image,
+            addCountType: p.AddCountType
         }));
         const existGrView = {
             groupId: gr.Id,
@@ -131,7 +133,8 @@ router.get('/edit', (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     const ungroupedProds = prods.filter(p => !allGroupedProdId.includes(p.Id)).map(p => ({
         id: p.Id,
         name: p.Name,
-        image: p.Image
+        image: p.Image,
+        addCountType: p.AddCountType
     }));
     const ungrouped = {
         groupId: 0,
@@ -148,7 +151,7 @@ function GetProdsInGroup(groupId) {
         }
         let prods;
         if (groupId > 0) {
-            const [ps, prodsFieldsExist] = yield dbPool.execute(`SELECT p.Id as prodId, p.Name as prodName, p.Image as prodImage
+            const [ps, prodsFieldsExist] = yield dbPool.execute(`SELECT p.Id as prodId, p.Name as prodName, p.Image as prodImage, p.AddCountType as prodAddCountType
             FROM shopping_prods_prod p
             LEFT JOIN shopping_prods_by_groups gp ON gp.ProdId = p.Id
             WHERE gp.GroupId = :groupId
@@ -156,18 +159,22 @@ function GetProdsInGroup(groupId) {
             prods = ps;
         }
         else {
-            const [ps, prodsFieldsExist] = yield dbPool.execute(`SELECT p.Id as prodId, p.Name as prodName, p.Image as prodImage
+            const [ps, prodsFieldsExist] = yield dbPool.execute(`SELECT p.Id as prodId, p.Name as prodName, p.Image as prodImage, p.AddCountType as prodAddCountType
             FROM shopping_prods_prod p
             LEFT JOIN shopping_prods_by_groups gp ON gp.ProdId = p.Id
             WHERE gp.GroupId IS NULL
             ORDER BY Name`);
             prods = ps;
         }
-        const groupProds = prods.map(p => ({
-            id: p.prodId,
-            name: p.prodName,
-            image: p.prodImage
-        }));
+        const groupProds = prods.map(p => {
+            var _a;
+            return ({
+                id: p.prodId,
+                name: p.prodName,
+                image: p.prodImage,
+                addCountType: (_a = p.prodAddCountType) !== null && _a !== void 0 ? _a : 0
+            });
+        });
         return groupProds;
     });
 }
@@ -177,8 +184,10 @@ router.post('/addedit', (req, res, next) => __awaiter(void 0, void 0, void 0, fu
     }
     const prodId = req.body.id ? parseInt(req.body.id) : undefined;
     const groupId = req.body.groupId ? parseInt(req.body.groupId) : undefined;
-    const prodName = sanitizer_1.sanitize(req.body.name);
-    const imageBase64 = !!req.body.image ? sanitizer_1.sanitize(req.body.image) : null;
+    const prodName = (0, sanitizer_1.sanitize)(req.body.name);
+    const imageBase64 = !!req.body.image ? (0, sanitizer_1.sanitize)(req.body.image) : null;
+    const addCountType = (0, sanitizer_1.sanitize)(req.body.addCountType);
+    const templateName = (0, sanitizer_1.sanitize)(req.body.templateName); //'editshoplistgroup'
     let message = "";
     if (!prodName) {
         res.send({ success: false, message: `Название товара должно быть не пустым\n  ${JSON.stringify(req.body)}` });
@@ -191,11 +200,11 @@ router.post('/addedit', (req, res, next) => __awaiter(void 0, void 0, void 0, fu
             res.send({ success: false, message: `Не найден товар с Id=${prodId}` });
             return;
         }
-        yield dbPool.execute(`UPDATE shopping_prods_prod SET Name=:prodName, Image=:imageBase64 WHERE Id = ${prodId}`, { prodName, imageBase64 });
+        yield dbPool.execute(`UPDATE shopping_prods_prod SET Name=:prodName, Image=:imageBase64, AddCountType=:addCountType WHERE Id = ${prodId}`, { prodName, imageBase64, addCountType });
         message = `Обновлён товар Id= '${prodId}' из группы Id = '${groupId}'`;
     }
     else {
-        yield dbPool.execute(`INSERT INTO shopping_prods_prod (Name, Image) VALUES(:prodName, :imageBase64)`, { prodName, imageBase64 });
+        yield dbPool.execute(`INSERT INTO shopping_prods_prod (Name, Image, AddCountType) VALUES(:prodName, :imageBase64, :addCountType)`, { prodName, imageBase64, addCountType });
         if (groupId > 0) {
             yield dbPool.query(`INSERT INTO shopping_prods_by_groups (GroupId, ProdId) VALUES(${groupId}, LAST_INSERT_ID())`);
         }
@@ -208,7 +217,7 @@ router.post('/addedit', (req, res, next) => __awaiter(void 0, void 0, void 0, fu
         message
     };
     //res.send({ success: true });
-    res.render('editshoplistgroup', { group });
+    res.render(templateName, { group });
 }));
 router.post('/addtogroup', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     if (!dbPool) {

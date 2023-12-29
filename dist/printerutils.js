@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.PrintText = exports.PrintRawBuf = exports.PrintRawStr = exports.PrintRaw = exports.strToNumArr = exports.page56 = exports.page42 = exports.page33 = void 0;
 const fs_1 = __importDefault(require("fs"));
 const node_cp866buffer_1 = __importDefault(require("node-cp866buffer"));
 // let printerFileName = "";

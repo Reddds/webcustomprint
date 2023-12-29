@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -11,16 +34,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const usb_detection_1 = __importDefault(require("usb-detection"));
-const serialport_1 = __importDefault(require("serialport"));
+exports.Scanner = void 0;
+// import usbDetect from 'usb-detection';
+const serialport_1 = require("serialport");
 const promise_1 = __importDefault(require("mysql2/promise"));
 const fs_1 = __importDefault(require("fs"));
 const async_lock_1 = __importDefault(require("async-lock"));
@@ -31,6 +48,7 @@ const child_process_1 = require("child_process");
 const PrintByQr = __importStar(require("./printbyqr"));
 const chestznak_1 = require("./chestznak");
 const utils_1 = require("./utils");
+const usb_1 = require("usb");
 class Scanner {
     // /**
     //  *
@@ -220,7 +238,7 @@ class Scanner {
                     Scanner.Say("Ничего не найдено");
                     return;
                 }
-                printerutils_1.PrintText(Scanner.WrapText(qrFound.Text, 33), printerutils_1.page33);
+                (0, printerutils_1.PrintText)(Scanner.WrapText(qrFound.Text, 33), printerutils_1.page33);
                 return;
             }
             // =================================================================
@@ -251,7 +269,7 @@ class Scanner {
                         const diff = this.getDifferenceInDays(now, prodInfo.ExpireDate);
                         // console.log("diff", diff);
                         // console.log("Math.abs(diff)", Math.abs(diff));
-                        const dayStr = utils_1.dayLetters(Math.abs(Math.floor(diff)));
+                        const dayStr = (0, utils_1.dayLetters)(Math.abs(Math.floor(diff)));
                         if (diff <= 0) {
                             console.log("now", now);
                             console.log("prodInfo.ExpireDate", prodInfo.ExpireDate);
@@ -397,8 +415,9 @@ class Scanner {
     /*
     "\x02m\x02\1bw0800\x02c0400\x02KD@AB\x0D" */
     InitSerialPort() {
-        const parser = new serialport_1.default.parsers.Readline({ delimiter: "\r", encoding: "utf8" });
-        this.port = new serialport_1.default("/dev/ttyACM0", {
+        const parser = new serialport_1.ReadlineParser({ delimiter: "\r", encoding: "utf8" }); //new 
+        this.port = new serialport_1.SerialPort({
+            path: "/dev/ttyACM0",
             baudRate: 9600,
             autoOpen: false
         });
@@ -438,7 +457,7 @@ class Scanner {
                 this._isplaying = true;
                 // this.lock.acquire("say", (done) => {
                 console.log("say enter", str);
-                child_process_1.exec(`spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
+                (0, child_process_1.exec)(`spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"`, (error, stdout, stderr) => {
                     // exec(`runuser -l basipuser -c 'spd-say --wait -o rhvoice -l ru -t female1 -r -30 "${str}"'`, (error, stdout, stderr) => {
                     if (error) {
                         console.error(error.message);
@@ -532,24 +551,38 @@ class Scanner {
             // console.log(barcodeData);
             console.log("Init scanner monitoring...");
             //  Detect scanner 05f9:4204
-            usb_detection_1.default.startMonitoring();
-            usb_detection_1.default.on('add:1529:16900', (device) => {
+            //usbDetect.startMonitoring();
+            /*
+                usbDetect.startMonitoring() & usbDetect.stopMonitoring()
+                There is no direct equivalent to these methods.
+                This is handled automatically for you when you add and remove event listeners.
+            */
+            usb_1.usb.refHotplugEvents();
+            usb_1.usb.on('attach', (device) => {
                 console.log('adding');
                 console.log('add', device);
-                this.OpenPort();
-                usb_detection_1.default.find(0x05f9, 0x4204, (err, devices) => {
-                    console.log('find', devices, err);
-                });
+                /*
+                    There is no equivalent to filter based on the vid or pid, instead you should do a check inside the callback you provide.
+                    The contents of the device object has also changed.
+                */
+                //!!!this.OpenPort();
+                // usbDetect.find(0x05f9, 0x4204, (err, devices) => {
+                //     console.log('find', devices, err);
+                // });
+                // const dev = usb.findByIds(0x05f9, 0x4204);
+                // console.log('find', dev);
             });
-            usb_detection_1.default.on('remove:1529:16900', (device) => {
+            usb_1.usb.on("detach", (device) => {
+                //TODO need filter!
                 console.log('removing');
                 console.log('remove', device);
-                this.ClosePort();
+                //!!!this.ClosePort();
             });
-            usb_detection_1.default.find(0x05f9, 0x4204, (err, devices) => {
+            /*!!!
+            usbDetect.find(0x05f9, 0x4204, (err, devices) => {
                 console.log('find', devices, err);
                 this.OpenPort();
-            });
+            });*/
             this.InitSerialPort();
             // this.Say("Программа запущена");
             this.printByQrSettings = PrintByQr.LoadQrSettings();

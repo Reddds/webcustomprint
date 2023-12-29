@@ -1,0 +1,17 @@
+block content
+  each prod in group.prods  
+    //- prodInCol++;
+    div.me-3
+      - var id = `prod_${prod.id}`;
+      - var idDel = `prod_${prod.id}_del`;
+      
+      .btn-group(role="group",aria-label="Basic example")
+        button.btn.btn-outline-primary.prod-add(id=id, data-name=prod.name, data-add-count-type=prod.addCountType, data-group-id=group.groupId, data-group-name=group.groupName)
+          if prod.image 
+            img.prod-img(src=prod.image, alt=prod.name)
+          else  
+            img.prod-img(src=`/images/prods/empty.webp`, alt=prod.name)
+          span=prod.name
+          span.prod-quantity
+        button.btn.btn-primary.d-none.prod-del(data-name=prod.name, data-group-id=group.groupId, data-group-name=group.groupName)
+          <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000' style="width:16px"><path d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/></svg>

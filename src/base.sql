@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS `shopping_prods_prod` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `Name` varchar(50) NOT NULL,
   `Image` mediumtext,
+  `AddCountType` INT,
   PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3 COMMENT='Товары для покупок';
 

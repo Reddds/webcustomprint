@@ -59,6 +59,11 @@ sqlite> .mode csv
 sqlite> .separator "\t" ---IMPORTANT! should be in double quotes
 sqlite> .import ../db_src/uhtt_barcode_ref_all.csv barcodes
 
+
+mysql> show databases;
+mysql> use prods;
+mysql> SHOW TABLES;
+
 # voice
 ```
 add-apt-repository ppa:linvinus/rhvoice

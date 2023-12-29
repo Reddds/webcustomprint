@@ -44,7 +44,14 @@ type prodModel = {
     id: number,
     groupId: number,
     name: string,
-    image?: string
+    image?: string,
+    /** 
+     * Тип добавление количества 
+     * undefined | 0 - поштучно
+     * 1 - Прибавление по 100 гр
+     * 2 - Прибавление по 500 гр
+     * */
+    addCountType?: number
 }
 
 // type prodViewModel = {
@@ -119,7 +126,8 @@ router.get('/', async (req, res, next) => {
         const groupProds = prods.filter(p => prodsId.includes(p.Id)).map(p => <prodModel>{
             id: p.Id,
             name: p.Name,
-            image: p.Image
+            image: p.Image,
+            addCountType: p.AddCountType
         });
 
         if (groupProds && groupProds.length > 0) {
@@ -147,6 +155,7 @@ interface IShopProd extends mysql.RowDataPacket {
     Id: number;
     Name: string;
     Image: string;
+    AddCountType: number | undefined;
 }
 
 interface IShopProdByGroup extends mysql.RowDataPacket {
@@ -174,7 +183,8 @@ router.get('/edit', async (req, res, next) => {
         const groupProds = prods.filter(p => prodsId.includes(p.Id)).map(p => <prodModel>{
             id: p.Id,
             name: p.Name,
-            image: p.Image
+            image: p.Image,
+            addCountType: p.AddCountType
         });
 
         const existGrView: groupViewModel = {
@@ -189,7 +199,8 @@ router.get('/edit', async (req, res, next) => {
     const ungroupedProds = prods.filter(p => !allGroupedProdId.includes(p.Id)).map(p => <prodModel>{
         id: p.Id,
         name: p.Name,
-        image: p.Image
+        image: p.Image,
+        addCountType: p.AddCountType
     });
     const ungrouped: groupViewModel = {
         groupId: 0,
@@ -209,7 +220,7 @@ async function GetProdsInGroup(groupId: number): Promise<prodModel[]> {
     let prods: IShopProd[];
     if (groupId > 0) {
         const [ps, prodsFieldsExist] = await dbPool.execute<IShopProd[]>(
-            `SELECT p.Id as prodId, p.Name as prodName, p.Image as prodImage
+            `SELECT p.Id as prodId, p.Name as prodName, p.Image as prodImage, p.AddCountType as prodAddCountType
             FROM shopping_prods_prod p
             LEFT JOIN shopping_prods_by_groups gp ON gp.ProdId = p.Id
             WHERE gp.GroupId = :groupId
@@ -219,7 +230,7 @@ async function GetProdsInGroup(groupId: number): Promise<prodModel[]> {
         prods = ps;
     } else {
         const [ps, prodsFieldsExist] = await dbPool.execute<IShopProd[]>(
-            `SELECT p.Id as prodId, p.Name as prodName, p.Image as prodImage
+            `SELECT p.Id as prodId, p.Name as prodName, p.Image as prodImage, p.AddCountType as prodAddCountType
             FROM shopping_prods_prod p
             LEFT JOIN shopping_prods_by_groups gp ON gp.ProdId = p.Id
             WHERE gp.GroupId IS NULL
@@ -231,11 +242,24 @@ async function GetProdsInGroup(groupId: number): Promise<prodModel[]> {
     const groupProds = prods.map(p => <prodModel>{
         id: p.prodId,
         name: p.prodName,
-        image: p.prodImage
+        image: p.prodImage,
+        addCountType: p.prodAddCountType ?? 0
     });
 
     return groupProds;
 }
+
+/** Загрузка кртинки из URL. А то из браузера CORS мучает */
+router.post('/loadimagefromurl', async (req, res, next) => {
+    try {
+        const url = sanitize(req.body.url);
+        let fimg = await fetch(url);
+        const imageBase64 = Buffer.from(await fimg.arrayBuffer()).toString('base64');
+        res.send(imageBase64);     
+    } catch (error) {
+        res.send(error);
+    }
+});
 
 router.post('/addedit', async (req, res, next) => {
     if (!dbPool) {
@@ -246,6 +270,8 @@ router.post('/addedit', async (req, res, next) => {
     const groupId = req.body.groupId ? parseInt(req.body.groupId) : undefined;
     const prodName = sanitize(req.body.name);
     const imageBase64 = !!req.body.image ? sanitize(req.body.image) : null;
+    const addCountType = sanitize(req.body.addCountType);
+    const templateName = sanitize(req.body.templateName); //'editshoplistgroup'
 
     let message = "";
 
@@ -255,7 +281,6 @@ router.post('/addedit', async (req, res, next) => {
     }
 
     if (prodId > 0) {
-
         const [prods, prodsFieldsExist] = await dbPool.query<IShopProd[]>(`SELECT * FROM shopping_prods_prod WHERE Id = ${prodId}`);
 
         if (!prods || prods.length == 0) {
@@ -264,12 +289,12 @@ router.post('/addedit', async (req, res, next) => {
             return;
         }
 
-        await dbPool.execute<IShopProd[]>(`UPDATE shopping_prods_prod SET Name=:prodName, Image=:imageBase64 WHERE Id = ${prodId}`,
-            { prodName, imageBase64 });
+        await dbPool.execute<IShopProd[]>(`UPDATE shopping_prods_prod SET Name=:prodName, Image=:imageBase64, AddCountType=:addCountType WHERE Id = ${prodId}`,
+            { prodName, imageBase64, addCountType });
         message = `Обновлён товар Id= '${prodId}' из группы Id = '${groupId}'`;
     } else {
-        await dbPool.execute<IShopProd[]>(`INSERT INTO shopping_prods_prod (Name, Image) VALUES(:prodName, :imageBase64)`,
-            { prodName, imageBase64 });
+        await dbPool.execute<IShopProd[]>(`INSERT INTO shopping_prods_prod (Name, Image, AddCountType) VALUES(:prodName, :imageBase64, :addCountType)`,
+            { prodName, imageBase64, addCountType });
         if (groupId > 0) {
             await dbPool.query<IShopProd[]>(`INSERT INTO shopping_prods_by_groups (GroupId, ProdId) VALUES(${groupId}, LAST_INSERT_ID())`);
         }
@@ -285,7 +310,7 @@ router.post('/addedit', async (req, res, next) => {
 
     //res.send({ success: true });
 
-    res.render('editshoplistgroup', { group });
+    res.render(templateName, { group });
 });
 
 router.post('/addtogroup', async (req, res, next) => {
