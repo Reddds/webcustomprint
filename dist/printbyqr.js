@@ -3,7 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoadQrSettings = exports.SetOnReloadEvent = exports.HomeQrPrefix = void 0;
+exports.HomeQrPrefix = void 0;
+exports.SetOnReloadEvent = SetOnReloadEvent;
+exports.LoadQrSettings = LoadQrSettings;
 const express_1 = __importDefault(require("express"));
 const fs_1 = __importDefault(require("fs"));
 const router = express_1.default.Router();
@@ -13,7 +15,6 @@ let OnReloadEvent;
 function SetOnReloadEvent(ev) {
     OnReloadEvent = ev;
 }
-exports.SetOnReloadEvent = SetOnReloadEvent;
 // export.OnReloadSettings = OnReloadSettings;
 router.get('/', (req, res, next) => {
     let settingStr = "1 Пример что печатать";
@@ -34,7 +35,6 @@ function LoadQrSettings() {
         return JSON.parse(filecontStr);
     }
 }
-exports.LoadQrSettings = LoadQrSettings;
 router.post('/', (req, res, next) => {
     const settingStr = req.body.printsettings;
     let alertStr = "";

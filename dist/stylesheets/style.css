@@ -1,5 +1,5 @@
 body {
-    padding: 50px;
+    /* padding: 50px; */
     font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
@@ -63,7 +63,8 @@ textarea.print-row-len-33 {
 /* ================================================================================ */
 
 img.prod-img {
-    width: 50px;
+    max-width: 50px;
+    max-height: 50px;
     margin-right: 10px;
 }
 
@@ -88,4 +89,53 @@ img.modal-prod-img {
 .prod-quantity {
     margin-left: 10px;
     font-weight: bold;
+}
+
+.prod-add {
+    height: 70px;
+}
+
+button.btn.prod-edit {
+    display: none;
+}
+
+body.edit button.btn.prod-edit {
+    display: block;
+}
+
+/*========================================================*/
+/* .no-scroll {
+    height: 100%;
+    overflow-y: hidden;
+ } */
+.loading-container {
+    position: absolute;
+    z-index: 10000;
+    width: 100vw;
+    height: 100vh;
+    background-color: antiquewhite;
+}
+
+.loading {
+  width: 500px;
+  height: 220px;
+  background: #fff;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0px 40px 60px -20px rgba(0,0,0,0.2);
+}
+.loading p {
+    font-size: 50px;
+    font-weight: 600;
+    letter-spacing: 8px;
+    font-family: 'Roboto', sans-serif;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-transform: uppercase;
+    color: #2c3e50;
+    margin-top: -20px;
 }

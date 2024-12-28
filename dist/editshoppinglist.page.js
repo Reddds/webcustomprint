@@ -19,43 +19,43 @@ $(() => {
     //     editProdModal.show();
     // });
 
-    $("#v-pills-tabContent").on("click", ".editProdButton", function () {
-        const $but = $(this);
-        const prodId = $but.data("prodId");
-        const prodName = $but.data("prodName");
-        const prodImage = $but.data("prodImage");
-        const addCountType = $but.data("addCountType");
-        const groupId = $but.data("groupId");
-        const groupName = $but.data("groupName");
-        const templateName = $but.data("templateName");
-        const elId = $(`.tab-pane.active .container`).attr('id');
-        if (!elId) {
-            alert("Не найдена открытая категория!");
-            return;
-        }
+    // $("#v-pills-tabContent").on("click", ".editProdButton, .prod-edit", function () {
+    //     const $but = $(this);
+    //     const prodId = $but.data("prodId");
+    //     const prodName = $but.data("prodName");
+    //     const prodImage = $but.data("prodImage");
+    //     const addCountType = $but.data("addCountType");
+    //     const groupId = $but.data("groupId");
+    //     const groupName = $but.data("groupName");
+    //     const templateName = $but.data("templateName");
+    //     const elId = $(`.tab-pane.active .container`).attr('id');
+    //     if (!elId) {
+    //         alert("Не найдена открытая категория!");
+    //         return;
+    //     }
 
-        $("#editProdModal #prodId").val(prodId);
-        $("#editProdModal #groupId").val(groupId);
-        $("#editProdModal #prodName").val(prodName);
-        $("#editProdModal #elId").val(elId);
-        $("#editProdModal #templateName").val(templateName);
+    //     $("#editProdModal #prodId").val(prodId);
+    //     $("#editProdModal #groupId").val(groupId);
+    //     $("#editProdModal #prodName").val(prodName);
+    //     $("#editProdModal #elId").val(elId);
+    //     $("#editProdModal #templateName").val(templateName);
 
-        $("#editProdModal .modal-title").text(`Изменение товара в '${groupName}'`);
-        var editProdModalEl = document.querySelector('#editProdModal');
-        var editProdModal = bootstrap.Modal.getOrCreateInstance(editProdModalEl);
-        if (prodImage) {
-            $("#prodImg").attr("src", prodImage);
-            imageBase64 = prodImage;
-            $("#prodImg").show();
-        } else {
-            $("#prodImg").hide();
-        }
-        //if (addCountType) {
-            console.log(`addCountType `, addCountType)
-            $("#editProdModal #addCountType").val(addCountType ?? 0);
-        //}
-        editProdModal.show();
-    });
+    //     $("#editProdModal .modal-title").text(`Изменение товара в '${groupName}'`);
+    //     var editProdModalEl = document.querySelector('#editProdModal');
+    //     var editProdModal = bootstrap.Modal.getOrCreateInstance(editProdModalEl);
+    //     if (prodImage) {
+    //         $("#prodImg").attr("src", prodImage);
+    //         imageBase64 = prodImage;
+    //         $("#prodImg").show();
+    //     } else {
+    //         $("#prodImg").hide();
+    //     }
+    //     //if (addCountType) {
+    //         console.log(`addCountType `, addCountType)
+    //         $("#editProdModal #addCountType").val(addCountType ?? 0);
+    //     //}
+    //     editProdModal.show();
+    // });
 
     $("#v-pills-tabContent").on("click", ".deleteProdButton", function () {
         //debugger;

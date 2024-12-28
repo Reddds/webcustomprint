@@ -3,7 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PrintText = exports.PrintRawBuf = exports.PrintRawStr = exports.PrintRaw = exports.strToNumArr = exports.page56 = exports.page42 = exports.page33 = void 0;
+exports.page56 = exports.page42 = exports.page33 = void 0;
+exports.strToNumArr = strToNumArr;
+exports.PrintRaw = PrintRaw;
+exports.PrintRawStr = PrintRawStr;
+exports.PrintRawBuf = PrintRawBuf;
+exports.PrintText = PrintText;
 const fs_1 = __importDefault(require("fs"));
 const node_cp866buffer_1 = __importDefault(require("node-cp866buffer"));
 // let printerFileName = "";
@@ -83,7 +88,6 @@ function strToNumArr(str) {
     }
     return new Uint8Array(retArr);
 }
-exports.strToNumArr = strToNumArr;
 function PrintImageCitizen(buf) {
     // [mode] [width in bytes (2b)] [height in rows (2b)]
     const mode = buf[0];
@@ -187,7 +191,6 @@ function PrintRaw(raw) {
             break;
     }
 }
-exports.PrintRaw = PrintRaw;
 /**
  * print string
  * @param raw string data
@@ -199,7 +202,6 @@ function PrintRawStr(raw) {
     console.log("bufWithCut", bufWithCut);
     fs_1.default.writeFileSync(printerFile, bufWithCut);
 }
-exports.PrintRawStr = PrintRawStr;
 function PrintRawBuf(raw) {
     console.log("printing raw buffer...");
     //const fullBuf = new Uint8Array(Buffer.from(raw));
@@ -207,7 +209,6 @@ function PrintRawBuf(raw) {
     //console.log("bufWithCut", bufWithCut);
     fs_1.default.writeFileSync(printerFile, raw);
 }
-exports.PrintRawBuf = PrintRawBuf;
 // Печать ШК
 // HRI [GS][\x48][\x0]
 // [GS][\x6B][\x8]tessst[\x0]
@@ -291,5 +292,4 @@ function PrintText(textForPrint, forPrint) {
     const bufWithCut = new Uint8Array([...fullBuf, ...cutAndEject]);
     fs_1.default.writeFileSync(printerFile, bufWithCut);
 }
-exports.PrintText = PrintText;
 //# sourceMappingURL=printerutils.js.map

@@ -23,6 +23,6 @@ block content
               img(src=prod.image alt="Картинка товара" style="height:50px")
           td 
             button.btn.btn-link.addToGroupProdButton(data-prod-id=prod.id, data-prod-name=prod.name, data-prod-image=prod.image, data-group-id=group.groupId, data-group-name=group.groupName) Добавить и в другую группу
-            button.btn.btn-link.editProdButton(data-prod-id=prod.id, data-prod-name=prod.name, data-prod-image=prod.image, data-add-count-type=prod.addCountType, data-group-id=group.groupId, data-group-name=group.groupName, data-template-name="editshoplistgroup") Править
+            button.btn.btn-link.editProdButton(data-prod-id=prod.id, data-prod-name=prod.name, data-prod-image=prod.image, data-add-count-type=prod.addCountType, data-group-id=group.groupId, data-group-name=group.groupName, data-el-id=tabId, data-template-name="editshoplistgroup") Править
             button.btn.btn-link.deleteProdButton(data-prod-id=prod.id, data-prod-name=prod.name, data-prod-image=prod.image, data-group-id=group.groupId, data-group-name=group.groupName) Удалить
             //- prod.addCountType

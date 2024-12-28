@@ -35,6 +35,7 @@ app.use('/scan', scan_1.default);
 app.use('/print', print_1.default);
 app.use("/bootstrap", express_1.default.static(path_1.default.join(__dirname, '../node_modules/bootstrap/dist')));
 app.use("/jquery", express_1.default.static(path_1.default.join(__dirname, '../node_modules/jquery/dist')));
+app.use("/js-cookie", express_1.default.static(path_1.default.join(__dirname, '../node_modules/js-cookie/dist')));
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
     next((0, http_errors_1.default)(404));

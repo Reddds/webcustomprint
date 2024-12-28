@@ -39,6 +39,7 @@ app.use('/print', printRouter);
 
 app.use("/bootstrap", express.static(path.join(__dirname, '../node_modules/bootstrap/dist')));
 app.use("/jquery", express.static(path.join(__dirname, '../node_modules/jquery/dist')));
+app.use("/js-cookie", express.static(path.join(__dirname, '../node_modules/js-cookie/dist')));
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

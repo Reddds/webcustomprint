@@ -1,17 +1,20 @@
 block content
   each prod in group.prods  
     //- prodInCol++;
-    div.me-3
+    .me-3.mb-3
       - var id = `prod_${prod.id}`;
       - var idDel = `prod_${prod.id}_del`;
       
       .btn-group(role="group",aria-label="Basic example")
-        button.btn.btn-outline-primary.prod-add(id=id, data-name=prod.name, data-add-count-type=prod.addCountType, data-group-id=group.groupId, data-group-name=group.groupName)
+        
+        button.btn.btn-outline-primary.text-nowrap.prod-add(id=id, data-name=prod.name, data-add-count-type=prod.addCountType, data-group-id=group.groupId, data-group-name=group.groupName)
           if prod.image 
             img.prod-img(src=prod.image, alt=prod.name)
           else  
             img.prod-img(src=`/images/prods/empty.webp`, alt=prod.name)
           span=prod.name
           span.prod-quantity
+        button.btn.btn-primary.prod-edit(data-prod-id=prod.id, data-prod-name=prod.name, data-prod-image=prod.image, data-add-count-type=prod.addCountType, data-group-id=group.groupId, data-group-name=group.groupName, data-el-id=tabId, data-template-name="shoplistgroup")       
+          <svg fill="#000000" style="width:16px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path d="M403.914,0L54.044,349.871L0,512l162.128-54.044L512,108.086L403.914,0z M295.829,151.319l21.617,21.617L110.638,379.745 l-21.617-21.617L295.829,151.319z M71.532,455.932l-15.463-15.463l18.015-54.043l51.491,51.491L71.532,455.932z M153.871,422.979 l-21.617-21.617l206.809-206.809l21.617,21.617L153.871,422.979z M382.297,194.555l-64.852-64.852l21.617-21.617l64.852,64.852 L382.297,194.555z M360.679,86.468l43.234-43.235l64.853,64.853l-43.235,43.234L360.679,86.468z"></path> </g> </g> </g></svg>
         button.btn.btn-primary.d-none.prod-del(data-name=prod.name, data-group-id=group.groupId, data-group-name=group.groupName)
           <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000' style="width:16px"><path d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/></svg>

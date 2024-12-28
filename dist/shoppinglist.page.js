@@ -1,3 +1,7 @@
+// const Cookies = require("js-cookie");
+
+const selectionDataKey = "selectionData";
+
 Date.prototype.dd_mm_yy = function () {
     var mm = this.getMonth() + 1; // getMonth() is zero-based
     var dd = this.getDate();
@@ -50,26 +54,69 @@ $(() => {
         return `${weightGr / 1000} кг`;
     }
 
-    $("body").on("click", ".prod-add", function () {
-        //console.log("prod-add click");
-        const $btn = $(this);
-        const $butDelete = $btn.siblings(".prod-del");
-        const addCountType = $btn.data("addCountType") ?? 0;
+    /** Запись в куки */
+    function SyncToCookies() {
+
+        const prodSelectList = [];
+        const $selectedButtons = GetSelected();
+        if ($selectedButtons.length === 0) {
+            return;
+        }
+
+        $selectedButtons.each((i, el) => {
+            const $btn = $(el);
+            const id = $btn.attr('id');
+            const curQuantity = $btn.data("quantity");
+            if (!curQuantity) {
+                return;
+            }
+            const name = el.dataset["name"];
+            const quantityStr = $btn.data("quantityStr");
+            prodSelectList.push({
+                id,
+                name,
+                quantity: curQuantity,
+                quantityStr
+            });
+        });
+
+        Cookies.set(selectionDataKey, JSON.stringify(prodSelectList, undefined, 4));
+
+        // alert(JSON.stringify(prodSelectList, undefined, 4));
+    }
+
+    /** Загрузка из куков */
+    function SyncFromCookies() {
+        const prodSelectListCookie = Cookies.get(selectionDataKey);
+        if(!prodSelectListCookie) {
+            return;
+        }
+        const prodSelectList = JSON.parse(prodSelectListCookie);
+        if(!prodSelectList || prodSelectList.length === 0) {
+            return;
+        }
+
+        prodSelectList.forEach(prodSel => {
+            const $btn = $(`#${prodSel.id}`);
+            // const curQuantity = $btn.data("quantity");
+            SelectProd($btn);
+            SetQuantity($btn, prodSel.quantity);
+        });
+
+        // alert(JSON.stringify(prodSelectList, undefined, 4));
+    }
+
+    function SetQuantity($btn, curQuantity) {
         const $prodQuantity = $(".prod-quantity", $btn);
-        let curQuantity = $btn.data("quantity") ?? 0;
-        //$btn.data("selected", 1);
-        $butDelete.removeClass("d-none");
-        $btn.removeClass("btn-outline-primary").addClass("btn-primary");
+        const addCountType = $btn.data("addCountType") ?? 0;
         switch (addCountType) {
             case 0:
-                curQuantity++;
                 $btn.data("quantity", curQuantity);
                 $btn.data("quantityStr", `${curQuantity} шт`);
                 $prodQuantity.text(`${curQuantity} шт`);
                 break;
             case 1:
                 {
-                    curQuantity += 100;
                     $btn.data("quantity", curQuantity);
                     const weight = NormalizeWeight(curQuantity);
                     $btn.data("quantityStr", weight);
@@ -78,7 +125,6 @@ $(() => {
                 break;
             case 2:
                 {
-                    curQuantity += 500;
                     $btn.data("quantity", curQuantity);
                     const weight = NormalizeWeight(curQuantity);
                     $btn.data("quantityStr", weight);
@@ -86,6 +132,53 @@ $(() => {
                 }
                 break;
         }
+    }
+
+    function SelectProd($btn) {
+        const $butDelete = $btn.siblings(".prod-del");
+        $butDelete.removeClass("d-none");
+        $btn.removeClass("btn-outline-primary").addClass("btn-primary");
+    }
+
+    $("body").on("click", ".prod-add", function () {
+        //console.log("prod-add click");
+        const $btn = $(this);
+        SelectProd($btn);
+        // const $butDelete = $btn.siblings(".prod-del");
+        const addCountType = $btn.data("addCountType") ?? 0;
+        // const $prodQuantity = $(".prod-quantity", $btn);
+        let curQuantity = $btn.data("quantity") ?? 0;
+        //$btn.data("selected", 1);
+        // $butDelete.removeClass("d-none");
+        // $btn.removeClass("btn-outline-primary").addClass("btn-primary");
+        switch (addCountType) {
+            case 0:
+                curQuantity++;
+                // $btn.data("quantity", curQuantity);
+                // $btn.data("quantityStr", `${curQuantity} шт`);
+                // $prodQuantity.text(`${curQuantity} шт`);
+                break;
+            case 1:
+                {
+                    curQuantity += 100;
+                    // $btn.data("quantity", curQuantity);
+                    // const weight = NormalizeWeight(curQuantity);
+                    // $btn.data("quantityStr", weight);
+                    // $prodQuantity.text(weight);
+                }
+                break;
+            case 2:
+                {
+                    curQuantity += 500;
+                    // $btn.data("quantity", curQuantity);
+                    // const weight = NormalizeWeight(curQuantity);
+                    // $btn.data("quantityStr", weight);
+                    // $prodQuantity.text(weight);
+                }
+                break;
+        }
+        SetQuantity($btn, curQuantity);
+        SyncToCookies();
         //const 
     });
 
@@ -105,6 +198,8 @@ $(() => {
         const $btn = $butDelete.siblings(".prod-add");
 
         ClearButton($btn);
+
+        SyncToCookies();
 
         // //const addCountType = $btn.data("addCountType") ?? 0;
         // const $prodQuantity = $(".prod-quantity", $btn);
@@ -128,6 +223,10 @@ $(() => {
         $selectedButtons.each(function () {
             ClearButton($(this));
         });
+    });
+
+    $("#editBtn").on("click", () => {
+        $("body").toggleClass("edit");
     });
 
     $("#printBtn").on("click", () => {
@@ -184,4 +283,10 @@ $(() => {
         Send("print", title, msg);
 
     });
+
+
+
+    SyncFromCookies();
+
+    $(".loading-container").remove();
 });

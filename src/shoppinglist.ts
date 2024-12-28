@@ -1,4 +1,5 @@
 import express from 'express';
+// import fetch from 'node-fetch';
 import fs, { fdatasync, PathLike } from "fs";
 import mysql from "mysql2/promise";
 import { sanitize } from "sanitizer";
@@ -251,13 +252,30 @@ async function GetProdsInGroup(groupId: number): Promise<prodModel[]> {
 
 /** Загрузка кртинки из URL. А то из браузера CORS мучает */
 router.post('/loadimagefromurl', async (req, res, next) => {
+    
+    const [major, minor, patch] = process.versions.node.split('.').map(Number);
     try {
+        process.versions
+        //res.send(JSON.stringify(req.body));
+        // return;
         const url = sanitize(req.body.url);
-        let fimg = await fetch(url);
+
+        if(!fetch) {
+            res.send({ success: false, nodeVer: `${major}.${minor}`, msg: "fetch not exists!"});
+            return;
+        }
+
+        const fimg = await fetch(url);
+        if(!fimg.ok) {
+            res.send({ success: false, nodeVer: `${major}.${minor}`});
+            return;
+        }
+        //res.send({ nodeVer: `${major}.${minor}`, "fimg": JSON.stringify(fimg)});
+        //return;
         const imageBase64 = Buffer.from(await fimg.arrayBuffer()).toString('base64');
-        res.send(imageBase64);     
+        res.send({ success: true, url, headers: JSON.stringify(fimg.headers.get("content-type")),  "imageBase64": `data:${fimg.headers.get("content-type")};base64,` + imageBase64 });
     } catch (error) {
-        res.send(error);
+        res.send({ success: false, nodeVer: `${major}.${minor}`,  errorStr: JSON.stringify(error) });
     }
 });
 
@@ -272,6 +290,7 @@ router.post('/addedit', async (req, res, next) => {
     const imageBase64 = !!req.body.image ? sanitize(req.body.image) : null;
     const addCountType = sanitize(req.body.addCountType);
     const templateName = sanitize(req.body.templateName); //'editshoplistgroup'
+    const elId = sanitize(req.body.elId);
 
     let message = "";
 
@@ -310,7 +329,7 @@ router.post('/addedit', async (req, res, next) => {
 
     //res.send({ success: true });
 
-    res.render(templateName, { group });
+    res.render(templateName, { tabId: elId, group });
 });
 
 router.post('/addtogroup', async (req, res, next) => {

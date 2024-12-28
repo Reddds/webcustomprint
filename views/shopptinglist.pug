@@ -1,10 +1,27 @@
 extends layout
 
+
+
 block content
+  .loading-container
+    .loading
+      //- p loading
+      p Загрузка
+        span
+        span
+        span
+
+  nav.navbar.sticky-top.bg-body-tertiary
+    .container-fluid
+      a.navbar-brand= title
+      button.btn.btn-primary.ms-2#printBtn Печать
+      button.btn.btn-outline-secondary.ms-2#clearBtn Очистить
+      button.btn.btn-outline-secondary.ms-2#editBtn Редактировать
   div.container-fluid
-    h1= title
-      button.btn.btn-primary.ms-5#printBtn Печать
-      button.btn.btn-outline-secondary.ms-5#clearBtn Очистить
+    //- h1= title
+    //-   button.btn.btn-primary.ms-5#printBtn Печать
+    //-   button.btn.btn-outline-secondary.ms-5#clearBtn Очистить
+    //-   button.btn.btn-outline-secondary.ms-5#editBtn Редактировать
 
     each group in groupsView
       - var tabId = `group-content-${group.groupId}`
@@ -13,7 +30,7 @@ block content
         button.btn.btn-outline-primary.addProdButton(data-group-id=group.groupId, data-group-name=group.groupName, data-el-id=tabId, data-template-name="shoplistgroup") +
 
       //- var prodInCol = 0;
-      div.d-flex.justify-content-start(id=tabId)
+      .d-flex.flex-row.flex-wrap.justify-content-start(id=tabId)
           include shoplistgroup
 
   div.modal#busyIndicator(data-bs-backdrop="static", data-bs-keyboard="false", tabindex="-1", aria-labelledby="staticBackdropLabel", aria-hidden="true")
@@ -26,6 +43,7 @@ block content
             span.visually-hidden#busyIndicatorAltLabel
 
   //- block scripts
+  script(src='/js-cookie/js.cookie.js')  
   script(src='./shoppinglist.page.js')
 
   include ./shoppinglistcommon.pug

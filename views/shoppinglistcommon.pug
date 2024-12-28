@@ -24,8 +24,11 @@ block addModal
             .mb-3 
               .input-group
                 input.form-control#imageUrl(type="text", aria-label="Изображение из URL", aria-describedby="buttonImageFromUrl")
-                button.btn.btn-outline-secondary#buttonImageFromUrl(type="button") Загрузить
-            | Ctrl+c - вставить из буфера обмена 
+                button.btn.btn-outline-secondary#buttonClearImageUrl(type="button") Очистить
+                button.btn.btn-outline-secondary#buttonImageFromUrl(type="button") Загрузить по ссылке
+              //- .input-group
+              //-   button.btn.btn-outline-secondary#buttonPasteImage(type="button") Вставить из буфера
+            | Ctrl+c - вставить из буфера (на планшете можно вставлять в строку выше)
             .mb-3 
               img(id="prodImg" src="#" alt="Картинка товара", style="width:200px")
         .modal-footer
