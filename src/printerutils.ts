@@ -324,6 +324,15 @@ function ReplaceSpecialChars(text: string): string {
     return text;
 }
 
+/**
+ * 
+ * printMode
+ * 
+ * 
+ * @param textForPrint 
+ * @param forPrint 
+ */
+
 export function PrintText(textForPrint: string, forPrint: printedModel) {
     const setupBuf = new Uint8Array([
         0x1b, 0x21, forPrint.printMode,

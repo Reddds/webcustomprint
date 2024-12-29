@@ -277,6 +277,14 @@ function ReplaceSpecialChars(text) {
     // }
     return text;
 }
+/**
+ *
+ * printMode
+ *
+ *
+ * @param textForPrint
+ * @param forPrint
+ */
 function PrintText(textForPrint, forPrint) {
     const setupBuf = new Uint8Array([
         0x1b, 0x21, forPrint.printMode,

@@ -3,9 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.InitMysql = InitMysql;
 const express_1 = __importDefault(require("express"));
 const promise_1 = __importDefault(require("mysql2/promise"));
 const sanitizer_1 = require("sanitizer");
+// import * as sharp from "sharp";
+const sharp_1 = __importDefault(require("sharp"));
 const router = express_1.default.Router();
 let dbPool;
 async function InitMysql() {
@@ -72,7 +75,7 @@ router.get('/', async (req, res, next) => {
         await InitMysql();
     }
     const [groups, groupsFieldsExist] = await dbPool.query(`SELECT * FROM shopping_prods_group order by Name`);
-    const [prods, prodsFieldsExist] = await dbPool.query(`SELECT * FROM shopping_prods_prod order by Name`);
+    const [prods, prodsFieldsExist] = await dbPool.query(`SELECT Id, Name, ThumbImage, AddCountType FROM shopping_prods_prod order by Name`);
     const [prodsByGroups, prodsByGroupsFieldsExist] = await dbPool.query(`SELECT * FROM shopping_prods_by_groups`);
     const groupsView = [];
     groups.forEach(gr => {
@@ -80,7 +83,7 @@ router.get('/', async (req, res, next) => {
         const groupProds = prods.filter(p => prodsId.includes(p.Id)).map(p => ({
             id: p.Id,
             name: p.Name,
-            image: p.Image,
+            image: p.ThumbImage, // p.Image,
             addCountType: p.AddCountType
         }));
         if (groupProds && groupProds.length > 0) {
@@ -93,6 +96,76 @@ router.get('/', async (req, res, next) => {
         }
     });
     res.render('shopptinglist', { title: 'Список покупок', groupsView });
+});
+const decodeBase64Img = (base64String) => {
+    const matches = base64String.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+    //   obj: ImgObj = {};
+    if (matches.length !== 3) {
+        throw new Error('Invalid input string');
+    }
+    const [, extension, base64] = matches;
+    const obj = {
+        type: extension,
+        buffer: Buffer.from(base64, 'base64')
+    };
+    return obj;
+    // Based on: https://stackoverflow.com/Questions/20267939/Nodejs-Write-Base64-Image-File
+};
+/**
+ * Преобразование картинки в уменьшенную версию
+ * @param imageData Картинка в виде base64 Image src
+ */
+async function convertToThumb(imageData) {
+    const targetFormat = "webp";
+    const imageBuf = decodeBase64Img(imageData);
+    const buf = await (0, sharp_1.default)(imageBuf.buffer)
+        .resize(64, 64, { fit: 'inside' })
+        .toFormat(targetFormat)
+        .toBuffer();
+    return buferToBase64ImageSrc(buf, targetFormat);
+}
+/**
+ * http://192.168.88.95:3000/shoppinglist/preparedb
+ */
+router.get('/preparedb', async (req, res, next) => {
+    if (!dbPool) {
+        await InitMysql();
+    }
+    const [prods, prodsFieldsExist] = await dbPool.query(`SELECT * FROM shopping_prods_prod WHERE Image IS NOT NULL`); // AND ThumbImage IS NULL
+    // const curProd = prods[0];
+    // res.send(imageBuf.buffer);
+    // return;
+    // const targetFormat: keyof FormatEnum = "webp";
+    let convertedCount = 0;
+    // prods.forEach(curProd => {
+    for (const curProd of prods) {
+        const thumb = await convertToThumb(curProd.Image);
+        // const imageBuf = decodeBase64Img(curProd.Image);
+        // const buf = await sharp(imageBuf.buffer)
+        //     .resize(64, 64, { fit: 'inside' })
+        //     .toFormat(targetFormat)
+        //     .toBuffer();
+        // await dbPool.execute<IShopProd[]>(`UPDATE shopping_prods_prod SET ThumbImage=:thumbImage WHERE Id = ${curProd.Id}`,
+        //     { thumbImage: buferToBase64ImageSrc(buf, targetFormat) });
+        await dbPool.execute(`UPDATE shopping_prods_prod SET ThumbImage=:thumbImage WHERE Id = ${curProd.Id}`, { thumbImage: thumb });
+        convertedCount++;
+    }
+    ;
+    res.send(`preparing DB. converted: ${convertedCount}`);
+    // sharp(imageBuf.buffer)
+    //     .resize(64, 64, { fit: 'inside' })
+    //     .toFormat(targetFormat)
+    //     .toBuffer()
+    //     .then(data => {
+    //         dbPool.execute<IShopProd[]>(`UPDATE shopping_prods_prod SET ThumbImage=:thumbImage WHERE Id = ${curProd.Id}`,
+    //             { thumbImage: buferToBase64ImageSrc(data, targetFormat) });
+    //         // res.send(data);
+    //         res.send(`preparing DB. Without thumb image ${curProd.Id} ${curProd.Name}: ${prods.length}`);
+    //     })
+    //     .catch(err => {
+    //         res.send(`error preparing ${curProd.Name}: ${err}`);
+    //     });
+    // return "preparing DB";
 });
 router.get('/edit', async (req, res, next) => {
     if (!dbPool) {
@@ -184,13 +257,19 @@ router.post('/loadimagefromurl', async (req, res, next) => {
         }
         //res.send({ nodeVer: `${major}.${minor}`, "fimg": JSON.stringify(fimg)});
         //return;
-        const imageBase64 = Buffer.from(await fimg.arrayBuffer()).toString('base64');
-        res.send({ success: true, url, headers: JSON.stringify(fimg.headers.get("content-type")), "imageBase64": `data:${fimg.headers.get("content-type")};base64,` + imageBase64 });
+        // const imageBase64 = Buffer.from(await fimg.arrayBuffer()).toString('base64');
+        res.send({ success: true, url, headers: JSON.stringify(fimg.headers.get("content-type")), "imageBase64": buferToBase64ImageSrc(Buffer.from(await fimg.arrayBuffer()), fimg.headers.get("content-type")) }); //`data:${fimg.headers.get("content-type")};base64,` + imageBase64 
     }
     catch (error) {
         res.send({ success: false, nodeVer: `${major}.${minor}`, errorStr: JSON.stringify(error) });
     }
 });
+function buferToBase64ImageSrc(buf, format) {
+    return base64ToImageSrc(buf.toString('base64'), format);
+}
+function base64ToImageSrc(data, format) {
+    return `data:${format};base64,` + data;
+}
 router.post('/addedit', async (req, res, next) => {
     if (!dbPool) {
         await InitMysql();
@@ -202,6 +281,10 @@ router.post('/addedit', async (req, res, next) => {
     const addCountType = (0, sanitizer_1.sanitize)(req.body.addCountType);
     const templateName = (0, sanitizer_1.sanitize)(req.body.templateName); //'editshoplistgroup'
     const elId = (0, sanitizer_1.sanitize)(req.body.elId);
+    let thumb = undefined;
+    if (imageBase64) {
+        thumb = await convertToThumb(imageBase64);
+    }
     let message = "";
     if (!prodName) {
         res.send({ success: false, message: `Название товара должно быть не пустым\n  ${JSON.stringify(req.body)}` });
@@ -214,11 +297,11 @@ router.post('/addedit', async (req, res, next) => {
             res.send({ success: false, message: `Не найден товар с Id=${prodId}` });
             return;
         }
-        await dbPool.execute(`UPDATE shopping_prods_prod SET Name=:prodName, Image=:imageBase64, AddCountType=:addCountType WHERE Id = ${prodId}`, { prodName, imageBase64, addCountType });
+        await dbPool.execute(`UPDATE shopping_prods_prod SET Name=:prodName, Image=:imageBase64, ThumbImage=:thumb, AddCountType=:addCountType WHERE Id = ${prodId}`, { prodName, imageBase64, thumb, addCountType });
         message = `Обновлён товар Id= '${prodId}' из группы Id = '${groupId}'`;
     }
     else {
-        await dbPool.execute(`INSERT INTO shopping_prods_prod (Name, Image, AddCountType) VALUES(:prodName, :imageBase64, :addCountType)`, { prodName, imageBase64, addCountType });
+        await dbPool.execute(`INSERT INTO shopping_prods_prod (Name, Image, ThumbImage, AddCountType) VALUES(:prodName, :imageBase64, :thumb, :addCountType)`, { prodName, imageBase64, thumb, addCountType });
         if (groupId > 0) {
             await dbPool.query(`INSERT INTO shopping_prods_by_groups (GroupId, ProdId) VALUES(${groupId}, LAST_INSERT_ID())`);
         }
