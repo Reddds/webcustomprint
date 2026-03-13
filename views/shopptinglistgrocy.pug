@@ -28,6 +28,7 @@ block content
     //-   button.btn.btn-outline-secondary.ms-5#editBtn Редактировать
     script.
       var groups = !{JSON.stringify(groups)};
+      var qus = !{JSON.stringify(qus)};
       //- alert(JSON.stringify(groups));
 
 
@@ -35,11 +36,11 @@ block content
       - var tabId = `group-content-${group.groupId}`
       p.mt-3
         span.group-name=group.groupName
-        button.btn.btn-outline-primary.addProdButton(data-group-id=group.groupId, data-group-name=group.groupName, data-el-id=tabId, data-template-name="shoplistgroup") +
+        button.btn.btn-outline-primary.addProdButton(data-group-id=group.groupId, data-group-name=group.groupName, data-el-id=tabId, data-template-name="shoplistgroupgrocy") +
 
       //- var prodInCol = 0;
       .d-flex.flex-row.flex-wrap.justify-content-start(id=tabId)
-          include shoplistgroup
+          include shoplistgroupgrocy
 
   div.modal#busyIndicator(data-bs-backdrop="static", data-bs-keyboard="false", tabindex="-1", aria-labelledby="staticBackdropLabel", aria-hidden="true")
     div.modal-dialog.modal-dialog-centered
@@ -52,6 +53,6 @@ block content
 
   //- block scripts
   script(src='/js-cookie/js.cookie.js')  
-  script(src='./shoppinglist.page.js')
+  script(src='./shoppinglistgrocy.page.js')
 
-  include ./shoppinglistcommon.pug
+  include ./shoppinglistgrocycommon.pug

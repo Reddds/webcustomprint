@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InitMysql = InitMysql;
+exports.InitMysql = void 0;
 const promise_1 = __importDefault(require("mysql2/promise"));
 let dbPool;
 async function InitMysql() {
@@ -34,4 +34,5 @@ async function InitMysql() {
         console.error(error);
     }
 }
+exports.InitMysql = InitMysql;
 //# sourceMappingURL=dbUtils.js.map

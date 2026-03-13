@@ -12,6 +12,7 @@ const morgan_1 = __importDefault(require("morgan"));
 const index_1 = __importDefault(require("./index"));
 const print_1 = __importDefault(require("./print"));
 const shoppinglist_1 = __importDefault(require("./shoppinglist"));
+const shoppinglistgrocy_1 = __importDefault(require("./shoppinglistgrocy"));
 const printbyqr_1 = __importDefault(require("./printbyqr"));
 const scan_1 = __importDefault(require("./scan"));
 const users_1 = __importDefault(require("../routes/users"));
@@ -30,6 +31,7 @@ app.use(express_1.default.static(__dirname)); // path.join(__dirname, 'public')
 app.use('/', index_1.default);
 app.use('/users', users_1.default);
 app.use('/shoppinglist', shoppinglist_1.default);
+app.use('/shoppinglist_grocy', shoppinglistgrocy_1.default);
 app.use('/printbyqr', printbyqr_1.default);
 app.use('/scan', scan_1.default);
 app.use('/print', print_1.default);

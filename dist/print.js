@@ -178,11 +178,11 @@ router.post('/', (req, res, next) => {
     // console.log("raw", req.body.raw);
     const raw = req.body.raw;
     const forPrint = {
-        title: title !== null && title !== void 0 ? title : new Date().toISOString(),
-        printMode: printModeVal, // 0x01,
-        lineSpacing: lineSpacingVal, // 0
-        charFont: charFontVal, // 0x01,
-        cpiMode: cpiModeVal, // 0x01,
+        title: title ?? new Date().toISOString(),
+        printMode: printModeVal,
+        lineSpacing: lineSpacingVal,
+        charFont: charFontVal,
+        cpiMode: cpiModeVal,
         content: textForPrint
     };
     try {

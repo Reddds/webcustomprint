@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response } from 'express';
 // import fetch from 'node-fetch';
 import fs, { fdatasync, PathLike } from "fs";
 import mysql from "mysql2/promise";
@@ -143,7 +143,7 @@ router.get('/', async (req, res, next) => {
 
 
 
-    res.render('shopptinglist', { title: 'Список покупок', groupsView });
+    res.render('shopptinglist', { title: 'Список покупок', groupsView, groups });
 });
 
 interface IShopCategory extends mysql.RowDataPacket {
@@ -316,8 +316,8 @@ async function GetProdsInGroup(groupId: number): Promise<prodModel[]> {
 
     let prods: IShopProd[];
     if (groupId > 0) {
-        const [ps, prodsFieldsExist] = await dbPool.execute<IShopProd[]>(
-            `SELECT p.Id as prodId, p.Name as prodName, p.Image as prodImage, p.AddCountType as prodAddCountType
+        const [ps, prodsFieldsExist] = await dbPool.execute<IShopProd[]>( // p.Image
+            `SELECT p.Id as prodId, p.Name as prodName, p.ThumbImage as prodImage, p.AddCountType as prodAddCountType
             FROM shopping_prods_prod p
             LEFT JOIN shopping_prods_by_groups gp ON gp.ProdId = p.Id
             WHERE gp.GroupId = :groupId
@@ -326,8 +326,8 @@ async function GetProdsInGroup(groupId: number): Promise<prodModel[]> {
         );
         prods = ps;
     } else {
-        const [ps, prodsFieldsExist] = await dbPool.execute<IShopProd[]>(
-            `SELECT p.Id as prodId, p.Name as prodName, p.Image as prodImage, p.AddCountType as prodAddCountType
+        const [ps, prodsFieldsExist] = await dbPool.execute<IShopProd[]>( // p.Image
+            `SELECT p.Id as prodId, p.Name as prodName, p.ThumbImage as prodImage, p.AddCountType as prodAddCountType
             FROM shopping_prods_prod p
             LEFT JOIN shopping_prods_by_groups gp ON gp.ProdId = p.Id
             WHERE gp.GroupId IS NULL
@@ -390,6 +390,7 @@ router.post('/addedit', async (req, res, next) => {
 
     const prodId = req.body.id ? parseInt(req.body.id) : undefined;
     const groupId = req.body.groupId ? parseInt(req.body.groupId) : undefined;
+    const prodGroupId = req.body.prodGroupId ? parseInt(req.body.prodGroupId) : undefined;
     const prodName = sanitize(req.body.name);
     const imageBase64 = !!req.body.image ? sanitize(req.body.image) : null;
     const addCountType = sanitize(req.body.addCountType);
@@ -397,7 +398,7 @@ router.post('/addedit', async (req, res, next) => {
     const elId = sanitize(req.body.elId);
 
     let thumb: string = undefined;
-    if(imageBase64) {
+    if (imageBase64) {
         thumb = await convertToThumb(imageBase64);
     }
 
@@ -417,20 +418,52 @@ router.post('/addedit', async (req, res, next) => {
             return;
         }
 
-        await dbPool.execute<IShopProd[]>(`UPDATE shopping_prods_prod SET Name=:prodName, Image=:imageBase64, ThumbImage=:thumb, AddCountType=:addCountType WHERE Id = ${prodId}`,
-            { prodName, imageBase64, thumb, addCountType });
+        if (imageBase64) {
+            await dbPool.execute<IShopProd[]>(`UPDATE shopping_prods_prod SET Name=:prodName, Image=:imageBase64, ThumbImage=:thumb, AddCountType=:addCountType WHERE Id = ${prodId}`,
+                { prodName, imageBase64, thumb, addCountType });
+        } else {
+            await dbPool.execute<IShopProd[]>(`UPDATE shopping_prods_prod SET Name=:prodName, AddCountType=:addCountType WHERE Id = ${prodId}`,
+                { prodName, addCountType });
+        }
+        // Если изменилась группа
+        if (prodGroupId != groupId) {
+            await dbPool.execute<IShopProd[]>(`UPDATE shopping_prods_by_groups SET GroupId=:prodGroupId WHERE ProdId = ${prodId}`,
+                { prodGroupId });
+        }
         message = `Обновлён товар Id= '${prodId}' из группы Id = '${groupId}'`;
     } else {
-        await dbPool.execute<IShopProd[]>(`INSERT INTO shopping_prods_prod (Name, Image, ThumbImage, AddCountType) VALUES(:prodName, :imageBase64, :thumb, :addCountType)`,
-            { prodName, imageBase64, thumb, addCountType });
+        if (imageBase64) {
+            await dbPool.execute<IShopProd[]>(`INSERT INTO shopping_prods_prod (Name, Image, ThumbImage, AddCountType) VALUES(:prodName, :imageBase64, :thumb, :addCountType)`,
+                { prodName, imageBase64, thumb, addCountType });
+        } else {
+            await dbPool.execute<IShopProd[]>(`INSERT INTO shopping_prods_prod (Name, AddCountType) VALUES(:prodName, :addCountType)`,
+                { prodName, addCountType });
+        }
         if (groupId > 0) {
             await dbPool.query<IShopProd[]>(`INSERT INTO shopping_prods_by_groups (GroupId, ProdId) VALUES(${groupId}, LAST_INSERT_ID())`);
         }
         message = `Добавлен товар '${prodName}' в группу Id = '${groupId}'`;
     }
 
+
+
+    // const group: groupViewModel = {
+    //     groupId,
+    //     groupName: "",
+    //     prods: await GetProdsInGroup(groupId),
+    //     message
+    // }
+
+    // //res.send({ success: true });
+
+    // res.render(templateName, { tabId: elId, group });
+
+    SendGroupRender(res, elId, templateName, groupId, message);
+});
+
+async function SendGroupRender(res: Response, elId: string, templateName: string, groupId: number, message: string) {
     const group: groupViewModel = {
-        groupId: groupId,
+        groupId,
         groupName: "",
         prods: await GetProdsInGroup(groupId),
         message
@@ -439,6 +472,11 @@ router.post('/addedit', async (req, res, next) => {
     //res.send({ success: true });
 
     res.render(templateName, { tabId: elId, group });
+}
+
+// /shoppinglist/groupview/group-content-2/shoplistgroup/2
+router.get('/groupview/:elId/:templateName/:groupId', async (req, res, next) => {
+    SendGroupRender(res, req.params.elId, req.params.templateName, parseInt(req.params.groupId), "");
 });
 
 router.post('/addtogroup', async (req, res, next) => {

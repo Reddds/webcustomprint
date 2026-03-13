@@ -9,6 +9,7 @@ import logger from 'morgan';
 import indexRouter from "./index";
 import printRouter from "./print";
 import shoppinglistRouter from "./shoppinglist";
+import shoppinglistGrocyRouter from "./shoppinglistgrocy";
 import printbyqrRouter from "./printbyqr";
 import scanRouter from "./scan";
 import usersRouter from "../routes/users";
@@ -33,6 +34,7 @@ app.use(express.static(__dirname)); // path.join(__dirname, 'public')
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/shoppinglist', shoppinglistRouter);
+app.use('/shoppinglist_grocy', shoppinglistGrocyRouter);
 app.use('/printbyqr', printbyqrRouter);
 app.use('/scan', scanRouter);
 app.use('/print', printRouter);

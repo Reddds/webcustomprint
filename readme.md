@@ -82,6 +82,9 @@ spd-say -o rhvoice -l ru  -t male1 -r -30 "Проверка синтезатор
 
 # For manual test
 
+Для компиляции изменений
+```tsc```
+
 `npm run start`
 
 Copy or make link "webcustomprint.service" to "/lib/systemd/system"

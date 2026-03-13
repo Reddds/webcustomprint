@@ -19,19 +19,26 @@ block addModal
               label.form-label(for="prodName") Название товара
               input.form-control#prodName(type="text", aria-describedby="prodNameHelp", name="prodName") 
               .form-text#prodNameHelp До 50 символов
-            .mb-3
-              span=addCountType
-              select.form-select#addCountType(aria-label="Default select example", name="addCountType")
-                option(value="0") Поштучно
-                option(value="1") По 100 грамм
-                option(value="2") По 500 грамм
+            .mb-3.row
+              .col-6
+                span Единицы измерения
+                select.form-select#addCountType(aria-label="Default select example", name="addCountType")
+                  option(value="0") Штуки
+                  option(value="1") Килограммы
+                  option(value="2") Граммы
+              .col-6.d-none#addCountPartsCol
+                span Количество при добавлении
+                select.form-select#addCountParts(aria-label="Default select example", name="addCountParts")
+                  option(value="0") Поштучно
+                  option(value="1") По 100 грамм
+                  option(value="2") По 500 грамм            
             .mb-3 
               .input-group
                 input.form-control#imageUrl(type="text", aria-label="Изображение из URL", aria-describedby="buttonImageFromUrl")
                 button.btn.btn-outline-secondary#buttonClearImageUrl(type="button") Очистить
                 button.btn.btn-outline-secondary#buttonImageFromUrl(type="button") Загрузить по ссылке
-              //- .input-group
-              //-   button.btn.btn-outline-secondary#buttonPasteImage(type="button") Вставить из буфера
+                //- .input-group
+                //-   button.btn.btn-outline-secondary#buttonPasteImage(type="button") Вставить из буфера
             | Ctrl+c - вставить из буфера (на планшете можно вставлять в строку выше)
             .mb-3 
               img(id="prodImg" src="#" alt="Картинка товара", style="width:200px")
@@ -39,7 +46,7 @@ block addModal
           button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Закрыть
           button.btn.btn-primary#applyProdEdit(type="button") Сохранить
   //- block scripts
-  script(src='/shoppinglistcommon.page.js')
+  script(src='/shoppinglistgrocycommon.page.js')
 
               
 

@@ -17,62 +17,75 @@ const charsInStroke = 33;
 /** Сколько символов отведено под количество */
 const quantityFieldWidth = 8;
 
+function QuantityToHeman(curQuantity,) {
+
+}
+
 function SetQuantity($btn, curQuantity) {
     const $prodQuantity = $(".prod-quantity", $btn);
     const addCountType = $btn.data("addCountType") ?? 0;
-    switch (addCountType) {
-        case 0:
-            $btn.data("quantity", curQuantity);
-            $btn.data("quantityStr", `${curQuantity} шт`);
-            $prodQuantity.text(`${curQuantity} шт`);
-            break;
-        case 1:
-            {
-                $btn.data("quantity", curQuantity);
-                const weight = NormalizeWeight(curQuantity);
-                $btn.data("quantityStr", weight);
-                $prodQuantity.text(weight);
-            }
-            break;
-        case 2:
-            {
-                $btn.data("quantity", curQuantity);
-                const weight = NormalizeWeight(curQuantity);
-                $btn.data("quantityStr", weight);
-                $prodQuantity.text(weight);
-            }
-            break;
-    }
+    const addCountPart = $btn.data("addCountPart") ?? 0;
+
+    // (n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3)
+
+    // switch (addCountType) {
+    //     case 0:
+    //         $btn.data("quantity", curQuantity);
+    //         $btn.data("quantityStr", `${curQuantity} шт`);
+    //         $prodQuantity.text(`${curQuantity} шт`);
+    //         break;
+    //     case 1:
+    //         {
+    //             $btn.data("quantity", curQuantity);
+    //             const weight = NormalizeWeight(curQuantity);
+    //             $btn.data("quantityStr", weight);
+    //             $prodQuantity.text(weight);
+    //         }
+    //         break;
+    //     case 2:
+    //         {
+    //             $btn.data("quantity", curQuantity);
+    //             const weight = NormalizeWeight(curQuantity);
+    //             $btn.data("quantityStr", weight);
+    //             $prodQuantity.text(weight);
+    //         }
+    //         break;
+    // }
+
+    $btn.data("quantity", curQuantity);
+    $btn.data("quantityStr", `${curQuantity} ${addCountType}`);
+    $prodQuantity.text(`${curQuantity} ${addCountType}`);
 }
 
 
 
 function SelectProd($btn) {
+    console.log("function SelectProd");
     const $butDelete = $btn.siblings(".prod-del");
     $butDelete.removeClass("d-none");
     $btn.removeClass("btn-outline-primary").addClass("btn-primary");
 }
 
 /** Загрузка из куков */
-function SyncFromCookies() {
-    const prodSelectListCookie = Cookies.get(selectionDataKey);
-    if (!prodSelectListCookie) {
-        return;
-    }
-    const prodSelectList = JSON.parse(prodSelectListCookie);
-    if (!prodSelectList || prodSelectList.length === 0) {
-        return;
-    }
+// function SyncFromCookies() {
+//     const prodSelectListCookie = Cookies.get(selectionDataKey);
+//     if (!prodSelectListCookie) {
+//         return;
+//     }
+//     const prodSelectList = JSON.parse(prodSelectListCookie);
+//     if (!prodSelectList || prodSelectList.length === 0) {
+//         return;
+//     }
 
-    prodSelectList.forEach(prodSel => {
-        const $btn = $(`#${prodSel.id}`);
-        // const curQuantity = $btn.data("quantity");
-        SelectProd($btn);
-        SetQuantity($btn, prodSel.quantity);
-    });
+//     prodSelectList.forEach(prodSel => {
+//         const $btn = $(`#${prodSel.id}`);
+//         // const curQuantity = $btn.data("quantity");
+//         SelectProd($btn);
+//         SetQuantity($btn, prodSel.quantity);
+//     });
 
-    // alert(JSON.stringify(prodSelectList, undefined, 4));
-}
+//     // alert(JSON.stringify(prodSelectList, undefined, 4));
+// }
 
 $(() => {
     function Send(action, title, txt) {
@@ -112,78 +125,97 @@ $(() => {
     }
 
     /** Запись в куки */
-    function SyncToCookies() {
+    // function SyncToCookies() {
 
-        const prodSelectList = [];
-        const $selectedButtons = GetSelected();
-        if ($selectedButtons.length === 0) {
-            return;
-        }
+    //     const prodSelectList = [];
+    //     const $selectedButtons = GetSelected();
+    //     if ($selectedButtons.length === 0) {
+    //         return;
+    //     }
 
-        $selectedButtons.each((i, el) => {
-            const $btn = $(el);
-            const id = $btn.attr('id');
-            const curQuantity = $btn.data("quantity");
-            if (!curQuantity) {
-                return;
-            }
-            const name = el.dataset["name"];
-            const quantityStr = $btn.data("quantityStr");
-            prodSelectList.push({
-                id,
-                name,
-                quantity: curQuantity,
-                quantityStr
-            });
-        });
+    //     $selectedButtons.each((i, el) => {
+    //         const $btn = $(el);
+    //         const id = $btn.attr('id');
+    //         const curQuantity = $btn.data("quantity");
+    //         if (!curQuantity) {
+    //             return;
+    //         }
+    //         const name = el.dataset["name"];
+    //         const quantityStr = $btn.data("quantityStr");
+    //         prodSelectList.push({
+    //             id,
+    //             name,
+    //             quantity: curQuantity,
+    //             quantityStr
+    //         });
+    //     });
 
-        Cookies.set(selectionDataKey, JSON.stringify(prodSelectList, undefined, 4));
+    //     Cookies.set(selectionDataKey, JSON.stringify(prodSelectList, undefined, 4));
 
-        // alert(JSON.stringify(prodSelectList, undefined, 4));
-    }
+    //     // alert(JSON.stringify(prodSelectList, undefined, 4));
+    // }
 
 
 
 
     $("body").on("click", ".prod-add", function () {
-        //console.log("prod-add click");
+        console.log("prod-add click");
         const $btn = $(this);
         SelectProd($btn);
         // const $butDelete = $btn.siblings(".prod-del");
-        const addCountType = $btn.data("addCountType") ?? 0;
+        // const addCountType = $btn.data("addCountType") ?? 0;
+        // const addCountPart = $btn.data("addCountPart") ?? 1;
+        const prodId = $btn.data("prodId") ?? null;
+        const idInShopList = $btn.data("idInShopList") ?? null;
         // const $prodQuantity = $(".prod-quantity", $btn);
         let curQuantity = $btn.data("quantity") ?? 0;
+
+        $.post("shoppinglist_grocy/addone",
+            {
+                id: prodId,
+                idInShopList: idInShopList
+            },
+            (data) => {
+                // debugger;
+                console.log("addone data", data);
+                $(".prod-quantity", $btn).text(data.amount);
+                $btn.data("idInShopList", data.prodInListId);
+            }
+        )
+
+
         //$btn.data("selected", 1);
         // $butDelete.removeClass("d-none");
         // $btn.removeClass("btn-outline-primary").addClass("btn-primary");
-        switch (addCountType) {
-            case 0:
-                curQuantity++;
-                // $btn.data("quantity", curQuantity);
-                // $btn.data("quantityStr", `${curQuantity} шт`);
-                // $prodQuantity.text(`${curQuantity} шт`);
-                break;
-            case 1:
-                {
-                    curQuantity += 100;
-                    // $btn.data("quantity", curQuantity);
-                    // const weight = NormalizeWeight(curQuantity);
-                    // $btn.data("quantityStr", weight);
-                    // $prodQuantity.text(weight);
-                }
-                break;
-            case 2:
-                {
-                    curQuantity += 500;
-                    // $btn.data("quantity", curQuantity);
-                    // const weight = NormalizeWeight(curQuantity);
-                    // $btn.data("quantityStr", weight);
-                    // $prodQuantity.text(weight);
-                }
-                break;
-        }
-        SetQuantity($btn, curQuantity);
-        SyncToCookies();
+        // switch (addCountType) {
+        //     case 0:
+        //         curQuantity++;
+        //         // $btn.data("quantity", curQuantity);
+        //         // $btn.data("quantityStr", `${curQuantity} шт`);
+        //         // $prodQuantity.text(`${curQuantity} шт`);
+        //         break;
+        //     case 1:
+        //         {
+        //             curQuantity += 100;
+        //             // $btn.data("quantity", curQuantity);
+        //             // const weight = NormalizeWeight(curQuantity);
+        //             // $btn.data("quantityStr", weight);
+        //             // $prodQuantity.text(weight);
+        //         }
+        //         break;
+        //     case 2:
+        //         {
+        //             curQuantity += 500;
+        //             // $btn.data("quantity", curQuantity);
+        //             // const weight = NormalizeWeight(curQuantity);
+        //             // $btn.data("quantityStr", weight);
+        //             // $prodQuantity.text(weight);
+        //         }
+        //         break;
+        // }
+        // curQuantity += addCountPart;
+        // SetQuantity($btn, curQuantity);
+        // SyncToCookies();
         //const 
     });
 
@@ -199,12 +231,29 @@ $(() => {
 
     $("body").on("click", ".prod-del", function () {
         //console.log("prod-del click");
+
         const $butDelete = $(this);
         const $btn = $butDelete.siblings(".prod-add");
 
-        ClearButton($btn);
+        const prodId = $btn.data("prodId") ?? null;
+        const idInShopList = $btn.data("idInShopList") ?? null;
 
-        SyncToCookies();
+        $.post("shoppinglist_grocy/removefromlist",
+            {
+                id: prodId,
+                idInShopList: idInShopList
+            },
+            (data) => {
+                if (data === true) {
+                    ClearButton($btn);
+                }
+            }
+        )
+
+
+
+
+        // SyncToCookies();
 
         // //const addCountType = $btn.data("addCountType") ?? 0;
         // const $prodQuantity = $(".prod-quantity", $btn);
@@ -291,7 +340,7 @@ $(() => {
 
 
 
-    SyncFromCookies();
+    // SyncFromCookies();
 
     $(".loading-container").remove();
 });

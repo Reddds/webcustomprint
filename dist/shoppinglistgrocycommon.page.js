@@ -8,12 +8,69 @@ $(() => {
 
         groups.forEach(group => {
             var option = $('<option/>');
-            option.attr({ 'value': group.Id }).text(group.Name);
-            if (groupId == group.Id) {
+            option.attr({ 'value': group.id }).text(group.name);
+            if (groupId == group.id) {
                 option.attr({ 'selected': 'selected' });
             }
             $groupSelect.append(option);
         });
+
+        // alert(groups);
+    }
+
+    function CreateQUList(prodQuId) {
+        const $countTypeSelect = $("#addCountType");
+        $countTypeSelect.empty();
+
+        qus.forEach(qu => {
+            var option = $('<option/>');
+            option.attr({ 'value': qu.id }).text(qu.name);
+            // if (prodQuId == qu.id) {
+            //     option.attr({ 'selected': 'selected' });
+            // }
+            $countTypeSelect.append(option);
+        });
+
+        const $addCountParts = $("#addCountParts");
+        const $addCountPartsCol = $("#addCountPartsCol");
+
+        $countTypeSelect.off();
+        $countTypeSelect.on("change", (e) => {
+            // debugger;
+            const quIdStr = $(e.currentTarget).val();
+            if (!quIdStr) {
+                $addCountPartsCol.addClass("d-none");
+                return;
+            }
+            const quId = parseInt(quIdStr);
+            const qu = qus.find(q => q.id === quId);
+            if (!qu?.userfields?.add_part_variants) {
+                $addCountPartsCol.addClass("d-none");
+                return;
+            }
+
+            $addCountParts.empty();
+            const quPartSpl = qu.userfields.add_part_variants.split(',');
+            quPartSpl.forEach((quPart, i) => {
+                var option = $('<option/>');
+                option.attr({ 'value': quPart }).text(quPart);
+                // if (groupId == qu.id) {
+                //     option.attr({ 'selected': 'selected' });
+                // }
+                $addCountParts.append(option);
+            });
+            $addCountPartsCol.removeClass("d-none");
+        });
+
+
+        // if(prodQuId) {
+        //     $countTypeSelect.val(prodQuId);
+        // }
+
+        // const selectedQu = qus.find(q => q.id === prodQuId);
+        // if(selectedQu) {
+
+        // }
 
         // alert(groups);
     }
@@ -25,6 +82,7 @@ $(() => {
         const groupName = $but.data("groupName");
         const elId = $but.data("elId");
         const templateName = $but.data("templateName");
+        const addCountTypeId = $but.data("addCountTypeId");
 
         $("#editProdModal #groupId").val(groupId);
         $("#editProdModal #prodName").val("");
@@ -33,6 +91,7 @@ $(() => {
         $("#editProdModal #imageUrl").val("");
 
         CreateGroupsList(groupId);
+        CreateQUList();
 
         $("#editProdModal .modal-title").text(`Добавление товара в '${groupName}'`);
         var editProdModalEl = document.querySelector('#editProdModal');
@@ -50,6 +109,8 @@ $(() => {
         const groupId = $but.data("groupId");
         const groupName = $but.data("groupName");
         const templateName = $but.data("templateName");
+        const addCountTypeId = $but.data("addCountTypeId");
+        const addCountPart = $but.data("addCountPart");
         const elId = $but.data("elId");// $(`.tab-pane.active .container`).attr('id');
         if (!elId) {
             alert("Не найдена открытая категория!");
@@ -66,6 +127,8 @@ $(() => {
         $("#editProdModal #imageUrl").val("");
 
         CreateGroupsList(groupId);
+        CreateQUList(addCountTypeId);
+
 
         $("#editProdModal .modal-title").text(`Изменение товара в '${groupName}'`);
         var editProdModalEl = document.querySelector('#editProdModal');
@@ -79,7 +142,10 @@ $(() => {
         }
         //if (addCountType) {
         console.log(`addCountType `, addCountType)
-        $("#editProdModal #addCountType").val(addCountType ?? 0);
+        // $("#editProdModal #addCountType").val(addCountType ?? 0);
+        $("#editProdModal #addCountType")
+            .val(addCountTypeId)
+            .trigger("change");
         //}
         editProdModal.show();
     });
@@ -101,20 +167,22 @@ $(() => {
             prodGroupId,
             image: imageBase64,
             addCountType: $("#addCountType").val(),
+            addCountPart: $("#addCountParts").val(),
             templateName,
-            elId
+            elId,
+
         };
 
         //alert(JSON.stringify(formData));
 
         //console.log("elId", elId);
         //debugger;
-        $(`#${elId}`).load("/shoppinglist/addedit", formData, function () {
+        $(`#${elId}`).load("/shoppinglist_grocy/addedit", formData, function () {
             // Обновляем группу, куда переехал товар
             if (prodGroupId != groupId) {
                 const otherElId = `group-content-${prodGroupId}`;
-                $(`#${otherElId}`).load(`/shoppinglist/groupview/${otherElId}/${templateName}/${prodGroupId}`, function () {
-                    SyncFromCookies();
+                $(`#${otherElId}`).load(`/shoppinglist_grocy/groupview/${otherElId}/${templateName}/${prodGroupId}`, function () {
+                    // SyncFromCookies();
                 });
             }
         });
@@ -151,7 +219,7 @@ $(() => {
             return;
         }
 
-        $.post('/shoppinglist/loadimagefromurl', { url })
+        $.post('/shoppinglistgrocy/loadimagefromurl', { url })
             .done(function (data) {
                 if (!data.success) {
                     alert(JSON.stringify(data));
