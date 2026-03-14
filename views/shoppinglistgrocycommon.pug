@@ -1,6 +1,6 @@
 block addModal
   .modal.fade#editProdModal(tabindex="-1")
-    .modal-dialog
+    .modal-dialog.modal-lg
       .modal-content
         .modal-header
           h5.modal-title Изменить товар
@@ -42,6 +42,15 @@ block addModal
             | Ctrl+c - вставить из буфера (на планшете можно вставлять в строку выше)
             .mb-3 
               img(id="prodImg" src="#" alt="Картинка товара", style="width:200px")
+            .mb-3.row 
+              .col-8 
+                .input-group
+                  button.btn.btn-outline-secondary#copyFromName(type="button") Вставить из названия
+                  input.form-control#searchQuery(value=" site:ozon.ru")
+              .col-4 
+                button.btn.btn-secondary#findInInternet(type="button") Найти в интернете
+            .mb-3 
+              .image-candidates.d-flex.flex-wrap
         .modal-footer
           button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Закрыть
           button.btn.btn-primary#applyProdEdit(type="button") Сохранить

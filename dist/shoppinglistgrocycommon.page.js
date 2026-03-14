@@ -75,7 +75,101 @@ $(() => {
         // alert(groups);
     }
 
-    $(".addProdButton").on("click", function () {
+    $("#findInInternet").on("click", () => {
+        const q = $("#searchQuery").val().trim();
+        if (!q) {
+            return;
+        }
+        getSearchImages(q);
+    });
+
+
+    $("#copyFromName").on("click", () => {
+        $("#searchQuery").val(`${$("#prodName").val().trim()} site:ozon.ru`);
+    });
+
+    function ClearImageSearchPart() {
+        $("#searchQuery").val("");
+        $(".image-candidates").empty();
+    }
+
+    async function imgToBase64Async(img) {
+        // Если картинка ещё не загружена — ждём
+        if (!img.complete) {
+            await new Promise(resolve => {
+                img.onload = resolve;
+                // на случай, если уже загружена, но событие не сработает
+                if (img.complete) resolve();
+            });
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        return canvas.toDataURL('image/png');
+    }
+
+
+    //$('#prodImg').attr('src', event.target.result).show();
+    $(".image-candidates").on("click", "img", async (e) => {
+        // // alert(e.target.src);
+        // const $prodImg = $('#prodImg');
+        // $prodImg.attr('src', e.target.src).show();
+        // imageBase64 = await imgToBase64Async($prodImg[0]);
+        // // $('#prodImg').attr('src', e.target.src).show();
+
+        imageFromUrl(e.target.src);
+    });
+
+    function imageFromUrl(url) {
+        $.post('/shoppinglist_grocy/loadimagefromurl', { url })
+            .done(function (data) {
+                if (!data.success) {
+                    alert(JSON.stringify(data));
+                    return;
+                }
+                imageBase64 = data.imageBase64;
+                $('#prodImg').attr('src', data.imageBase64).show();
+            });
+    }
+
+    function getSearchImages(q) {
+        const preparedQ = q.replace(' ', '+');
+        $.get(`/shoppinglist_grocy/searchimages/${encodeURIComponent(preparedQ)}`)
+            .done(function (data) {
+                if (!data.success) {
+                    console.log(data);
+
+                    const $imgCandidates = $(".image-candidates");
+                    $imgCandidates.empty();
+
+                    // const urlList = data.results.map(r => r.url);
+                    const urlList = data.results.map(r => r.tbLargeUrl);
+
+                    urlList.forEach(imUrl => {
+                        const newImg = $(`<img/>`, {
+                            src: imUrl,
+                            alt: "ccc",
+                            class: "img-thumbnail",
+                            css: {
+                                // width: "200px",
+                                height: "200px"
+                            }
+                        });
+                        $imgCandidates.append(newImg);
+                    });
+
+
+                    return;
+                }
+                // imageBase64 = data.imageBase64;
+                // $('#prodImg').attr('src', data.imageBase64).show();
+            });
+    }
+
+    $(".addProdButton").on("click", async function () {
         imageBase64 = undefined;
         const $but = $(this);
         const groupId = $but.data("groupId");
@@ -83,6 +177,8 @@ $(() => {
         const elId = $but.data("elId");
         const templateName = $but.data("templateName");
         const addCountTypeId = $but.data("addCountTypeId");
+
+        ClearImageSearchPart();
 
         $("#editProdModal #groupId").val(groupId);
         $("#editProdModal #prodName").val("");
@@ -92,6 +188,14 @@ $(() => {
 
         CreateGroupsList(groupId);
         CreateQUList();
+
+        // const txt = await getText('https://duckduckgo.com/?ia=images&origin=funnel_home_website&t=h_&q=%D0%9A%D0%B2%D0%B0%D1%81&chip-select=search&iax=images');
+        // console.log("resp body", txt);
+        // getSearchImages();
+
+        $("#editProdModal #addCountType")
+            .val(qus[0].id)
+            .trigger("change");
 
         $("#editProdModal .modal-title").text(`Добавление товара в '${groupName}'`);
         var editProdModalEl = document.querySelector('#editProdModal');
@@ -116,6 +220,7 @@ $(() => {
             alert("Не найдена открытая категория!");
             return;
         }
+        ClearImageSearchPart();
 
         // debugger;
 
@@ -212,6 +317,8 @@ $(() => {
         $("#imageUrl").val("");
     });
 
+
+
     $("#buttonImageFromUrl").on("click", () => {
         const url = $("#imageUrl").val().trim();
         if (!url) {
@@ -219,15 +326,7 @@ $(() => {
             return;
         }
 
-        $.post('/shoppinglistgrocy/loadimagefromurl', { url })
-            .done(function (data) {
-                if (!data.success) {
-                    alert(JSON.stringify(data));
-                    return;
-                }
-                imageBase64 = data.imageBase64;
-                $('#prodImg').attr('src', data.imageBase64).show();
-            });
+        imageFromUrl(url);
 
         // $.ajax({
         //     url: url,

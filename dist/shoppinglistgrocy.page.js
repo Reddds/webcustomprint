@@ -223,6 +223,7 @@ $(() => {
         const $butDelete = $btn.siblings(".prod-del");
         const $prodQuantity = $(".prod-quantity", $btn);
         $btn.data("quantity", 0);
+        $btn.data("idInShopList", null);
         //$btn.data("selected", undefined);
         $prodQuantity.empty();
         $butDelete.addClass("d-none");

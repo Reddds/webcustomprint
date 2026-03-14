@@ -1,4 +1,5 @@
 // import path from 'node:path';
+import { text } from 'node:stream/consumers';
 // const { version } = require('./package.json');
 import express, { Response } from 'express';
 // import fetch from 'node-fetch';
@@ -987,13 +988,13 @@ async function GetProdsInGroup(groupId: number): Promise<prodModel[]> {
 
     return groupProds;
 }
-/*
+
 // === Загрузка кртинки из URL. А то из браузера CORS мучает ===
 router.post('/loadimagefromurl', async (req, res, next) => {
 
     const [major, minor, patch] = process.versions.node.split('.').map(Number);
     try {
-        process.versions
+        //process.versions
         //res.send(JSON.stringify(req.body));
         // return;
         const url = sanitize(req.body.url);
@@ -1005,7 +1006,7 @@ router.post('/loadimagefromurl', async (req, res, next) => {
 
         const fimg = await fetch(url);
         if (!fimg.ok) {
-            res.send({ success: false, nodeVer: `${major}.${minor}` });
+            res.send({ success: false, nodeVer: `${major}.${minor}`, url: url, error: `Ошибка HTTP: ${fimg.status} ${fimg.statusText} ${await fimg.text()}`  });
             return;
         }
         //res.send({ nodeVer: `${major}.${minor}`, "fimg": JSON.stringify(fimg)});
@@ -1018,7 +1019,7 @@ router.post('/loadimagefromurl', async (req, res, next) => {
 });
 
 
-*/
+
 
 /** Добавление одной единицы товара */
 router.post('/addone', async (req, res, next) => {
@@ -1257,6 +1258,47 @@ async function SendGroupRender(res: Response, elId: string, templateName: string
 router.get('/groupview/:elId/:templateName/:groupId', async (req, res, next) => {
     SendGroupRender(res, req.params.elId, req.params.templateName, parseInt(req.params.groupId), "");
 });
+
+async function getTextFromUrl(url: string) {
+    const resReq = await fetch(url);
+    if (!resReq.ok) throw new Error(`HTTP ${resReq.status}`);
+
+    return await resReq.text();// text(resReq.body);
+}
+
+router.get('/searchimages/:searchquery', async (req, res, next) => {
+    try {
+        // const allText = await getTextFromUrl(`https://duckduckgo.com/?ia=images&origin=funnel_home_website&t=h_&q=${req.params.searchquery}&chip-select=search&iax=images`);
+
+        // const re = new RegExp(/vqd=(?<vqd>[0-9-]+)/, "g");
+
+        // const m = re.exec(allText);
+
+        // const vqd = m[1];
+
+        // const txtImg = await getTextFromUrl(`https://duckduckgo.com/i.js?o=json&q=mashrooms&l=wt-wt&vqd=${vqd}&p=1&ct=RU`);
+
+        // const txtImg = await getTextFromUrl(`https://cse.google.com/cse/element/v1?rsz=20&num=20&hl=en&source=gcsc&cselibv=61bbf1f9762e96cd&cx=partner-pub-5956360965567042%3A9380749580&q=${req.params.searchquery}&safe=off&cse_tok=AEXjvhIDkSNIQ8L5Pdoh2R2yoNr8%3A1773493833113&sort=&exp=cc&fexp=121574863%2C121574862%2C73152292%2C73152290&callback=google.search.cse.api12332&rurl=https%3A%2F%2Fgibiru.com%2Fresults.html%3Fq%3D%25D0%25BC%25D0%25B0%25D0%25BA%25D0%25B0%25D1%2580%25D0%25BE%25D0%25BD%25D1%258B%26rt%3Dimage%26cx%3Dpartner-pub-5956360965567042%253A8627692578%26cof%3DFORID%253A11%26ie%3DUTF-8`);
+        const txtImg = await getTextFromUrl(`https://cse.google.com/cse/element/v1?rsz=20&num=20&hl=en&source=gcsc&cselibv=61bbf1f9762e96cd&searchtype=image&cx=partner-pub-5956360965567042%3A9380749580&q=${req.params.searchquery}&safe=off&cse_tok=AEXjvhIaMzOrSo1jrAbE6mKaz9zb%3A1773497797141&exp=cc&fexp=121574863%2C121574862%2C73152292%2C73152290&callback=google.search.cse.api13409&rurl=https%3A%2F%2Fgibiru.com%2Fresults.html%3Fq%3D%25D0%25BC%25D0%25B0%25D0%25BA%25D0%25B0%25D1%2580%25D0%25BE%25D0%25BD%25D1%258B%2Bsite%253Aozon.ru%26rt%3D%26cx%3Dpartner-pub-5956360965567042%253A8627692578%26cof%3DFORID%253A11%26ie%3DUTF-8`);
+
+        // res.send(txtImg);
+
+        const re = new RegExp(/^\/\*O_o\*\/\s*google\.search\.cse\.api\d+\((?<jsonText>.+)\s*\);$/, "sg");
+        const m = re.exec(txtImg);
+
+        const jsonResStr = m[1];
+        const jsonData = JSON.parse(jsonResStr);
+
+        // const imgUrlArray = jsonData.results.map(r => r.richSnippet?.cseImage?.src);
+        // const imgUrlArray = jsonData.results.map(r => r.richSnippet?.cseImage?.src ?? r.richSnippet?.metatags?.ogImage);
+
+        res.send(jsonData);
+    } catch (error) {
+        res.send(error.message);
+    }
+
+});
+
 /*
 router.post('/addtogroup', async (req, res, next) => {
     if (!dbPool) {
